@@ -33,6 +33,7 @@ test, then keep a background queue of "hero" clips baking all afternoon.
 | 4 | Your laptop, on network, with team chat | You paste box output to us; Claude debugs through you. |
 | 5 | Git clone of this repo ON the box | `git clone https://github.com/Wally-Ahmed/dell-hardware-hack` — do this EARLY, while the box still has network. |
 | 6 | (Side quest) Phone/camera + 2–3 teammates who consent | Demo footage + stills. The consent registry needs real people who said yes. |
+| 7 | **A power strip**, and every model on external storage BEFORE arriving | Venue outlets and venue wifi are both scarce. `scripts/DOWNLOADS.md` is the shopping list — pull Tier 1 on a fast pipe at home. |
 
 **Timing reality:** hero clips take 3–6 minutes EACH on this hardware (it is 2.75–4.7×
 slower than a desktop 5090). The bakery queue needs every minute — target: **smoke test
