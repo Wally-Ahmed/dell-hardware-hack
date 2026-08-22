@@ -1,0 +1,24 @@
+{
+  "$comment": "Team-wide Claude Code settings. Committed deliberately so the model and effort pin applies to everyone on the project, not just one laptop.",
+  "model": "claude-fable-5",
+  "effortLevel": "max",
+  "env": {
+    "MONGODB_URI": "mongodb://localhost:27017/rushcut",
+    "HF_HUB_DISABLE_TELEMETRY": "1"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(uvicorn:*)",
+      "Bash(npm run:*)",
+      "Bash(npm install:*)",
+      "Bash(python -m pytest:*)",
+      "Bash(ruff:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(mongosh:*)",
+      "Bash(curl -s http://localhost:8000/*)",
+      "Bash(curl -s http://localhost:8188/*)"
+    ]
+  }
+}

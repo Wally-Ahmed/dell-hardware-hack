@@ -74,3 +74,6 @@ Thumbs.db
 # MemPalace per-project files (issue #185)
 mempalace.yaml
 entities.json
+
+# claude-mem writes these per-directory; local session context, never source
+CLAUDE.local.md
