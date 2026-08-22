@@ -7,7 +7,7 @@
     "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/devcontainers/features/common-utils:2": { "installZsh": true }
   },
-  "hostRequirements": { "cpus": 8, "memory": "16gb", "storage": "64gb" },
+  "hostRequirements": { "cpus": 4 },
   "postCreateCommand": "bash .devcontainer/setup.sh",
   "forwardPorts": [3000, 8000, 27017],
   "portsAttributes": {
