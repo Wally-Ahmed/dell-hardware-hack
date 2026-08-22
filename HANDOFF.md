@@ -24,10 +24,19 @@ contract, `docs/PLAN.md` for the full architecture essay.
 - Memory tooling on the host Mac: MemPalace (wing `dell_hardware_hack`), graphify graph of the
   brief (81 nodes / 6 labeled communities), auto-memory entries incl. GB10 gotchas.
 
-## ALL SOFTWARE LANES DONE — main `2c05c10`, 55/55 suite, ruff clean
+## ALL SOFTWARE LANES DONE — main `83eb544`, 55/55 suite, ruff clean
 
-Every branch (`main`/`backend`/`editor`/`ingest`/`box`) at the same tip. What remains is
-the BOX (human + hardware) and the demo itself.
+Every branch at the same tip. What remains is the BOX (human + hardware) and the demo.
+
+**19:35 EDT regression status:** ten commits landed after the original core-loop drive
+(pre-GPU cast gate, per-job-type template mapping, runsheet, walkthrough v2–v4). Suite
+re-verified green on tip in the Codespace (43/43 backend+agent+ingest there); a fresh
+full-loop UI drive on tip is running. **Box-side evidence (smoke test, LOOP GREEN ON REAL
+WEIGHTS) has NOT been pasted to the conductor yet** — Role A has the runsheet
+(docs/DEMO_RUNSHEET.md) and the endgame prompt (docs/ENDGAME_PROMPT.md); the two gating
+pastes remain: smoke output, then the loop-check result. On green, flip
+`RUSHCUT_EXECUTOR=comfy` re-verification is Role A-side (the conductor cannot reach the
+air-gapped box; it debugs through pasted output).
 
 - **Core loop PROVEN end to end in the Codespace** (editor + real backend + dev brain):
   pendingPlan held with ZERO jobs → approve → `generate_shot` → complete, clear verdict,
