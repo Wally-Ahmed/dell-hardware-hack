@@ -24,33 +24,39 @@ contract, `docs/PLAN.md` for the full architecture essay.
 - Memory tooling on the host Mac: MemPalace (wing `dell_hardware_hack`), graphify graph of the
   brief (81 nodes / 6 labeled communities), auto-memory entries incl. GB10 gotchas.
 
-## In flight (one builder left)
+## ALL SOFTWARE LANES DONE — main `2c05c10`, 55/55 suite, ruff clean
 
-- **Role C** — panels (AI chat / Cast / Models), generative timeline element, WS client in
-  the vendored OpenCut; building in the Codespace on `editor`. When it lands: conductor
-  drives the full loop through the UI (the goal's non-negotiable evidence), then merges.
+Every branch (`main`/`backend`/`editor`/`ingest`/`box`) at the same tip. What remains is
+the BOX (human + hardware) and the demo itself.
 
-## Merged and live-verified since (main `1b2f561`)
+- **Core loop PROVEN end to end in the Codespace** (editor + real backend + dev brain):
+  pendingPlan held with ZERO jobs → approve → `generate_shot` → complete, clear verdict,
+  provenance; policy beat: `policy_blocked` present. Panels serve `ai-chat-panel` /
+  `cast-panel` / `models-panel` testids on `/rushcut-dev` (the editor page SSRs a loading
+  gate by design — panels live in its chunk, hydration verified headless + reproduced by
+  the conductor). Typecheck: zero new errors (12 pre-existing, identical set).
+- **Editor (Role C, `ad267dc`)** — 4 panels, GenerativeElement with live WS progress fill
+  and policy tint, zustand WS store, `/rushcut-dev` harness. `bun run dev` in
+  `frontend/apps/web` (needs `.env.local`; `NEXT_PUBLIC_BACKEND_URL` default :8000).
+- **Render** (`6b3e897`) — /render verified with real encodes (2 clips + 500 ms gap →
+  exactly 2500 ms). Rendered files now carry a provenance `comment` tag (ffprobe-verified).
+- **Ingest & cast (Role D)** (`06a7a33`) — repo-backed /people, clustering (unresolved
+  NEVER dropped), `RUSHCUT_ANALYZERS=real|fake`. Live e2e = the demo beat.
+- **Pre-GPU cast gate** (`a2505c7`, peer-review idea) — jobs referencing non-approved or
+  unregistered people are born `policy_blocked`; the GPU never runs. Live-verified fresh
+  process (a seeding-order bug was caught live and regression-tested).
 
-- **Render** (`6b3e897`) — timeline JSON → ffmpeg trim/concat with black-gap segments,
-  mounted at `/render`. 12/12 tests with REAL encodes; live drive: 2 clips + 500 ms gap →
-  exactly 2500 ms by ffprobe.
-- **Ingest & cast (Role D)** (`06a7a33` + `1b2f561`) — repo-backed `/people` replaced the
-  stub (Mongo w/ in-memory fallback), cosine clustering (unresolved NEVER dropped),
-  pluggable analyzers (`RUSHCUT_ANALYZERS=real|fake`). 14/14 tests; live: policy persists,
-  ingest e2e `{shots:4, tracks:6, matched:2, new:1}` = the demo beat; chat `list_cast`
-  re-verified against it. **51/51 full backend suite.**
-- All of `main`/`backend`/`ingest`/`box` sit at `1b2f561`; only `editor` diverges (Role C).
+## Peer-repo review (rmcmurrer81/videostudio) — outcomes
 
-## Core loop status (goal: demo-ready 17:30)
-
-**Backend half PROVEN live** (commit `1e37623`): dev brain (scripted OpenAI-compatible
-stand-in, `backend/agent/dev_brain.py`, port 11434) + real backend + real AgentLoop —
-turn 1 held a pendingPlan with ZERO jobs created; approval executed `generate_shot`; job
-walked to `complete` with clear verdict + full provenance. `forcePolicyHit` lands
-`policy_blocked` (unapproved 0.81 + unresolved no-face + inpaint remediation). The GB10
-swaps the brain via `RUSHCUT_OLLAMA_URL` — dev brain never runs there. UI half lands with
-Role C, then the loop gets driven through the editor.
+Incorporated as reimplemented ideas: pre-GPU gate, provenance-in-file metadata,
+NVIDIA dgx-spark-playbooks pointer in `workflows/README.md` (Apache-2.0, GB10-validated
+fallback graphs — fetch from NVIDIA upstream, license-clean). Their repo has NO license:
+no code copied. Stretch ideas parked: ffmpeg auto color-match, relight presets, Mongo
+checkpoint/restore demo beat. **OPEN QUESTION for the user:** their HACKATHON_RULES.md
+quotes an organizer email requiring stack "NemoClaw + OpenClaw + OpenShell" (we comply)
+AND planning model `nvidia/Qwen3.6-35B-A3B-NVFP4` via vLLM **on port 8000** (collides with
+our backend port; differs from our Ollama brain). Verify against the real email; both are
+env-level flips at the box (`RUSHCUT_OLLAMA_URL`, `NEXT_PUBLIC_BACKEND_URL` + `--port`).
 
 **Role A is fully enabled:** `docs/ONBOARD_ROLE_A.md` (handoff packet incl. agent hard
 rules), `scripts/` (runbook, setup, smoke test, bakery — all verified), `workflows/README.md`
