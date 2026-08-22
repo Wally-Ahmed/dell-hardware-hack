@@ -6,25 +6,28 @@
 <title>VisualStudio — an AI-native editor for professional filmmakers</title>
 <style>
 /* ---------- base ----------
-   Light theme. Palette borrowed from https://brandom-guzman-lora.fly.dev/ :
-   bg #f7f4ed · surface #fffdf8 · surface-2 #efe9dc · line #e0d7c6
-   fg #1a1712 · muted #6d6456 · clay #9a4f2a · teal #0f6b70
-   (muted darkened one step to #5f5648 for projector legibility; semantic
-    ok/warn/bad re-shaded dark enough to hold contrast on a light ground) */
+   Light theme. Structure + lightness borrowed from https://brandom-guzman-lora.fly.dev/
+   (its bg #f7f4ed · surface #fffdf8 · surface-2 #efe9dc · line #e0d7c6 · fg #1a1712 ·
+   muted #6d6456 · clay #9a4f2a), then hue-rotated warm -> cool per request. The single
+   clay accent became a CYAN+PURPLE duotone: purple #7028d8 is the brand accent, cyan
+   #0e7490 carries flow (code identifiers, the doorway, the arrows feeding it). Neutrals
+   keep the reference's L* at each step, so verified contrast ratios carry over.
+   Semantic ok/warn/bad stay warm deliberately — they encode status, not theme. */
 *{margin:0;padding:0;box-sizing:border-box}
 :root{
-  --bg:#f7f4ed; --panel:#fffdf8; --panel2:#efe9dc; --line:#e0d7c6;
-  --text:#1a1712; --mut:#5f5648;
-  --accent:#9a4f2a; --accentdim:rgba(154,79,42,.35); --teal:#0f6b70;
+  --bg:#f5f6fb; --panel:#fdfeff; --panel2:#e9edf6; --line:#d4dbe9;
+  --text:#15171f; --mut:#525a6b;
+  --accent:#7028d8; --accentdim:rgba(112,40,216,.35);
+  --accent2:#0e7490; --accent2dim:rgba(14,116,144,.38);
   --ok:#2f6b3f; --warn:#8a5a06; --bad:#b3261e;
-  --lift:0 1px 2px rgba(26,23,18,.05);
+  --lift:0 1px 2px rgba(21,23,31,.05);
 }
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--text);
   font:16px/1.6 -apple-system,BlinkMacSystemFont,"SF Pro Text",Helvetica,Arial,sans-serif;
   overflow-x:hidden;-webkit-font-smoothing:antialiased}
 h1,h2,.pitch{font-family:"Iowan Old Style","Palatino","Georgia",serif}
-code{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:.92em;color:var(--accent)}
+code{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:.92em;color:var(--accent2)}
 main{max-width:1100px;margin:0 auto;padding:0 26px 90px}
 section{padding:64px 0 10px}
 h2{font-size:34px;font-weight:700;letter-spacing:.2px;margin-bottom:6px}
@@ -33,16 +36,16 @@ h2{font-size:34px;font-weight:700;letter-spacing:.2px;margin-bottom:6px}
 
 /* ---------- header ---------- */
 #top{position:sticky;top:0;z-index:50;height:64px;display:flex;align-items:center;gap:14px;
-  padding:0 22px;background:rgba(247,244,237,.88);backdrop-filter:blur(14px) saturate(150%);
+  padding:0 22px;background:rgba(245,246,251,.88);backdrop-filter:blur(14px) saturate(150%);
   border-bottom:1px solid var(--line)}
 #top .brand{font:800 17px/1 "Iowan Old Style","Palatino",Georgia,serif;letter-spacing:.4px}
 #top .brand b{color:var(--accent)}
 #top .tag{color:var(--mut);font-size:12.5px;border:1px solid var(--line);border-radius:999px;padding:4px 12px;background:var(--panel)}
 #top .sp{flex:1}
-#tourbtn{background:rgba(154,79,42,.09);color:var(--accent);border:1px solid var(--accentdim);
+#tourbtn{background:rgba(112,40,216,.09);color:var(--accent);border:1px solid var(--accentdim);
   border-radius:999px;padding:9px 18px;font:600 14px/1 -apple-system,Helvetica,sans-serif;cursor:pointer;
   transition:background .2s}
-#tourbtn:hover{background:rgba(154,79,42,.18)}
+#tourbtn:hover{background:rgba(112,40,216,.18)}
 
 /* ---------- hero ---------- */
 #hero{padding:74px 0 34px;text-align:center}
@@ -53,9 +56,9 @@ h2{font-size:34px;font-weight:700;letter-spacing:.2px;margin-bottom:6px}
   padding:7px 16px;font-size:13.5px;color:var(--text);white-space:nowrap;box-shadow:var(--lift)}
 .chip b{color:var(--accent);font-weight:600}
 #heroplay{margin-top:30px;display:inline-flex;flex-direction:column;align-items:center;gap:8px}
-#heroplay button{background:var(--accent);color:#fffdf8;border:none;border-radius:999px;
+#heroplay button{background:var(--accent);color:#fdfeff;border:none;border-radius:999px;
   padding:15px 34px;font:700 16.5px/1 -apple-system,Helvetica,sans-serif;cursor:pointer;
-  box-shadow:0 10px 32px -10px rgba(154,79,42,.55);transition:transform .15s}
+  box-shadow:0 10px 32px -10px rgba(112,40,216,.55);transition:transform .15s}
 #heroplay button:hover{transform:translateY(-1px)}
 #heroplay .hint{color:var(--mut);font-size:12.5px}
 body.touring #heroplay{visibility:hidden}
@@ -68,17 +71,17 @@ body.touring #heroplay{visibility:hidden}
 .card .em{color:var(--text);font-weight:600}
 .wide{grid-column:1/-1}
 .card.warnline{border-color:rgba(179,38,30,.45);background:linear-gradient(180deg,rgba(179,38,30,.055),var(--panel))}
-.card.goldline{border-color:var(--accentdim);background:linear-gradient(180deg,rgba(154,79,42,.05),var(--panel))}
+.card.goldline{border-color:var(--accentdim);background:linear-gradient(180deg,rgba(112,40,216,.05),var(--panel))}
 .ico{font-size:20px;margin-bottom:8px;display:block}
 
 /* scene 1 closing tension */
-.tension{margin-top:16px;border:1.5px solid rgba(154,79,42,.45);border-radius:16px;padding:20px 24px;
-  text-align:center;font-size:17.5px;color:var(--mut);background:rgba(154,79,42,.06)}
+.tension{margin-top:16px;border:1.5px solid rgba(112,40,216,.45);border-radius:16px;padding:20px 24px;
+  text-align:center;font-size:17.5px;color:var(--mut);background:rgba(112,40,216,.06)}
 .tension b{display:block;margin-top:5px;font:700 23px/1.25 "Iowan Old Style","Palatino",Georgia,serif;color:var(--accent)}
 
 /* one box */
-.gbbox{border:1.5px solid rgba(154,79,42,.38);border-radius:18px;padding:26px;background:
-  radial-gradient(120% 130% at 50% 0%,rgba(154,79,42,.06),transparent 60%),var(--panel)}
+.gbbox{border:1.5px solid rgba(112,40,216,.38);border-radius:18px;padding:26px;background:
+  radial-gradient(120% 130% at 50% 0%,rgba(112,40,216,.06),transparent 60%),var(--panel)}
 .gbbox .boxlabel{display:flex;justify-content:center;margin-bottom:18px}
 .gbbox .boxlabel span{font:700 12.5px/1 ui-monospace,Menlo,monospace;letter-spacing:.14em;color:var(--accent);
   border:1px solid var(--accentdim);border-radius:999px;padding:6px 16px;background:var(--panel)}
@@ -99,24 +102,24 @@ body.touring #heroplay{visibility:hidden}
   font-size:13.5px;display:flex;gap:9px;align-items:center;color:var(--text)}
 .pchip small{color:var(--mut);font-size:12.5px}
 .doorcol{display:flex;flex-direction:column;gap:10px}
-.doorway{border:1.5px solid rgba(154,79,42,.45);background:rgba(154,79,42,.06);border-radius:14px;
+.doorway{border:1.5px solid var(--accent2dim);background:rgba(14,116,144,.07);border-radius:14px;
   padding:16px;text-align:center}
 .doorway .srcs{display:flex;gap:8px;justify-content:center;margin-bottom:8px;flex-wrap:wrap}
 .doorway .srcs span{border:1px solid var(--line);border-radius:999px;padding:4px 11px;font-size:12.5px;
   color:var(--mut);background:var(--panel)}
-.doorway .conv{color:var(--accent);font-size:16px;line-height:1;margin-bottom:6px}
-.doorway b{display:block;font-size:14.5px;letter-spacing:.12em;color:var(--accent)}
+.doorway .conv{color:var(--accent2);font-size:16px;line-height:1;margin-bottom:6px}
+.doorway b{display:block;font-size:14.5px;letter-spacing:.12em;color:var(--accent2)}
 .doorway small{color:var(--mut);font-size:12.5px}
-.darr{text-align:center;color:var(--accent);font-size:18px;line-height:1}
+.darr{text-align:center;color:var(--accent2);font-size:18px;line-height:1}
 
 /* stack — mongo + nemoclaw */
 .stackgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:start}
-.policy{margin-top:12px;background:#1a1712;border:1px solid #3a332a;border-radius:12px;
-  padding:15px 18px;font:13px/1.75 ui-monospace,"SF Mono",Menlo,monospace;color:#e6ded0;
+.policy{margin-top:12px;background:#15171f;border:1px solid #2b3140;border-radius:12px;
+  padding:15px 18px;font:13px/1.75 ui-monospace,"SF Mono",Menlo,monospace;color:#dbe1ea;
   overflow-x:auto;white-space:pre}
 .policy .ok{color:#7fd39b;font-weight:700}
 .policy .no{color:#ef8b83;font-weight:700}
-.policy i{color:#9a9083;font-style:normal}
+.policy i{color:#8b94a6;font-style:normal}
 
 /* manners */
 .tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
@@ -128,7 +131,7 @@ body.touring #heroplay{visibility:hidden}
 .tier p{color:var(--mut);font-size:13.5px;line-height:1.55}
 .tier .em{color:var(--text);font-weight:600}
 .mfoot{margin-top:18px;text-align:center;border:1.5px solid var(--accentdim);border-radius:12px;
-  padding:14px;font-size:16px;background:rgba(154,79,42,.06)}
+  padding:14px;font-size:16px;background:rgba(112,40,216,.06)}
 .mfoot b{color:var(--accent)}
 
 /* consent */
@@ -146,7 +149,7 @@ body.touring #heroplay{visibility:hidden}
 .pledge .never{color:var(--mut);font-size:14px}
 .pledge .never s{color:var(--bad);font-weight:700;text-decoration-thickness:2px;text-decoration-color:var(--bad)}
 .pledge .p{border:1px solid var(--accentdim);color:var(--accent);border-radius:999px;padding:7px 16px;
-  font-weight:700;font-size:14px;background:rgba(154,79,42,.06)}
+  font-weight:700;font-size:14px;background:rgba(112,40,216,.06)}
 
 /* close */
 #close{text-align:center;padding-bottom:20px}
@@ -171,49 +174,63 @@ footer{border-top:1px solid var(--line);color:var(--mut);font-size:12.5px;text-a
    light ground. Dim floor kept at .42 so dimmed text stays legible on a projector. */
 .stepping .stepu{opacity:.42;transition:opacity .45s ease,box-shadow .45s ease,transform .45s ease,border-color .45s ease;transition-delay:0ms}
 .stepping .stepu.steplit{opacity:1;border-color:var(--accent);
-  box-shadow:0 0 0 2px rgba(154,79,42,.55),0 14px 30px -14px rgba(154,79,42,.5);transform:translateY(-2px)}
+  box-shadow:0 0 0 2px rgba(112,40,216,.55),0 14px 30px -14px rgba(112,40,216,.5);transform:translateY(-2px)}
 
 /* ---------- tour chrome ---------- */
 /* dark caption pill on a light page — guarantees separation from any section */
 .caption{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);
-  background:rgba(26,23,18,.95);backdrop-filter:blur(16px) saturate(160%);
-  border:1px solid rgba(154,79,42,.6);border-radius:14px;padding:16px 30px;
-  font-size:17px;font-weight:700;color:#f7f4ed;
-  box-shadow:0 18px 46px -14px rgba(26,23,18,.45);
+  background:rgba(21,23,31,.95);backdrop-filter:blur(16px) saturate(160%);
+  border:1px solid rgba(112,40,216,.6);border-radius:14px;padding:16px 30px;
+  font-size:17px;font-weight:700;color:#f5f6fb;
+  box-shadow:0 18px 46px -14px rgba(21,23,31,.45);
   opacity:0;transition:opacity 1.1s ease,transform 1.1s ease;z-index:100;
   max-width:82vw;text-align:center;pointer-events:none}
 .caption.show{opacity:1;transform:translateX(-50%) translateY(0);transition:opacity .4s,transform .4s}
-.caption b{color:#eaa87c}
-.caption code{color:#eaa87c}
+.caption b{color:#c4a6ff}
+.caption code{color:#c4a6ff}
 
-.scenevis{position:relative;width:100%;height:clamp(200px,30vh,320px);
-  border:1px solid rgba(154,79,42,.45);border-radius:14px;overflow:hidden;background:var(--panel2);
-  box-shadow:0 12px 32px -18px rgba(26,23,18,.35);
-  display:none;margin-bottom:2px}
+/* The strip SHRINK-WRAPS its content's 3:1 ratio (height drives width) instead of being
+   full-width. Full-width + cover cropped 8-34% off every frame; full-width + contain left
+   the visual stranded in a huge empty border. Shrink-wrapping means the border always hugs
+   the actual image: never cropped, never letterboxed. */
+/* Outer box stays FULL-WIDTH and opaque — it is sticky, so anything narrower lets the
+   section behind scroll through on both flanks. The visible frame is an inner 3:1 box
+   centred inside it, so the border hugs the image exactly: never cropped (the old
+   object-fit:cover sliced 8-34% off every frame), never floating in an empty border. */
+.scenevis{position:relative;width:100%;height:clamp(200px,30vh,330px);
+  background:var(--bg);display:none;margin-bottom:2px}
 .scenevis.show{display:block;animation:fadein .4s ease;position:sticky;top:64px;z-index:30}
 @keyframes fadein{from{opacity:0}to{opacity:1}}
-.scenevis .frame{position:absolute;inset:0}
+.scenevis .frame{position:absolute;inset:0;margin:auto;height:100%;width:auto;
+  aspect-ratio:3/1;max-width:100%;
+  border:1px solid rgba(112,40,216,.45);border-radius:14px;overflow:hidden;
+  box-shadow:0 12px 32px -18px rgba(21,23,31,.35)}
+/* contain, never cover: every scene visual is a 3:1 frame but the strip box runs 3.3-4.6:1
+   depending on viewport height, so cover silently cropped 8-34% off the top and bottom.
+   The letterbox sits on --bg, so it reads as matte rather than as bars. */
 .scenevis .frame img,.scenevis .frame video{position:absolute;inset:0;width:100%;height:100%;
-  object-fit:cover;opacity:0;transition:opacity .8s}
-.scenevis .frame img.on{opacity:1;animation:kenburns 16s ease-in-out forwards}
-@keyframes kenburns{from{transform:scale(1.03) translate(0,0)}to{transform:scale(1.17) translate(-2.5%,-2%)}}
+  object-fit:contain;opacity:0;transition:opacity .8s}
+/* no Ken Burns: these frames carry TEXT, and any scale>1 clips it against overflow:hidden.
+   A slow settle gives the still some life without ever leaving the box. */
+.scenevis .frame img.on{opacity:1;animation:settle 1.2s ease-out both}
+@keyframes settle{from{opacity:0}to{opacity:1}}
 /* float popup = clone of the docked strip's pinned geometry (auto margins, never translateX) */
-.scenevis.float{position:fixed;left:0;right:0;margin:0 auto;top:64px;width:min(1048px,calc(100vw - 52px));z-index:55}
+.scenevis.float{position:fixed;left:0;right:0;margin:0 auto;top:64px;z-index:55}
 
 .tourbar{position:fixed;right:14px;top:50%;transform:translateY(-50%) translateX(16px);
   display:flex;flex-direction:column;align-items:center;gap:10px;padding:10px 7px;
-  border-radius:999px;background:rgba(255,253,248,.96);border:1px solid var(--line);
-  box-shadow:0 10px 30px -12px rgba(26,23,18,.3);
+  border-radius:999px;background:rgba(253,254,255,.96);border:1px solid var(--line);
+  box-shadow:0 10px 30px -12px rgba(21,23,31,.3);
   z-index:60;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;height:min(70vh,540px)}
 .tourbar.show{opacity:1;transform:translateY(-50%) translateX(0);pointer-events:auto}
 .tourbar .pp{width:30px;height:30px;border-radius:50%;border:1px solid var(--accent);flex:0 0 auto;
-  background:rgba(154,79,42,.1);color:var(--accent);font-size:11px;cursor:pointer}
+  background:rgba(112,40,216,.1);color:var(--accent);font-size:11px;cursor:pointer}
 .tourbar .tsegs{display:flex;flex-direction:column;gap:4px;flex:1;min-height:0;width:14px}
 .tseg{width:14px;flex:1 1 8px;min-height:5px;border-radius:3px;cursor:pointer;border:none;padding:0;
-  background:rgba(26,23,18,.18);transition:background .25s,transform .15s}
+  background:rgba(21,23,31,.18);transition:background .25s,transform .15s}
 .tseg:hover{transform:scaleX(1.5)}
-.tseg.done{background:rgba(154,79,42,.45)}
-.tseg.active{background:var(--accent);box-shadow:0 0 0 2px rgba(154,79,42,.3)}
+.tseg.done{background:rgba(112,40,216,.45)}
+.tseg.active{background:var(--accent);box-shadow:0 0 0 2px rgba(112,40,216,.3)}
 
 /* paused tour hands the page back */
 .tourpaused .scenevis{display:none}
@@ -222,8 +239,7 @@ footer{border-top:1px solid var(--line);color:var(--mut);font-size:12.5px;text-a
 
 /* short viewports (real 16:9 screens lose ~130-180px to chrome) */
 @media (max-height:1000px){
-  .scenevis{height:clamp(150px,20vh,320px)}
-  .scenevis .frame img,.scenevis .frame video{object-fit:contain}
+  .scenevis{height:clamp(170px,25vh,250px)}
   .caption{bottom:10px;padding:9px 20px;font-size:14.5px}
 }
 @media (max-width:900px){
@@ -429,7 +445,7 @@ footer{border-top:1px solid var(--line);color:var(--mut);font-size:12.5px;text-a
 
 <footer>VisualStudio · hackathon build · everything on one box</footer>
 <div class="caption" id="caption"></div>
-<div id="buildtag" style="position:fixed;left:10px;bottom:6px;z-index:5;font:10px ui-monospace,monospace;color:#5f564855;pointer-events:none">build fly · 21:35Z · light · 7 scenes · 2:26</div>
+<div id="buildtag" style="position:fixed;left:10px;bottom:6px;z-index:5;font:10px ui-monospace,monospace;color:#525a6b55;pointer-events:none">build fly · 21:50Z · cyan+purple · 7 scenes · 2:26</div>
 
 <script>
 /* ================= reveal cascade ================= */
