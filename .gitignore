@@ -1,0 +1,72 @@
+# ---- Python (backend) ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+.env.*
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+
+# ---- Node (frontend) ----
+node_modules/
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+.npm/
+.pnpm-store/
+
+# ---- Models & weights (never commit; these live on NVMe / the USB drive) ----
+# Root-anchored so backend/models/ (registry.json, manager.py) stays tracked.
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+*.bin
+*.gguf
+*.onnx
+/models/
+/hf/
+/comfyui_models/
+/wheels/
+
+# ---- Media & renders ----
+*.mp4
+*.mov
+*.mkv
+*.webm
+*.wav
+*.mp3
+/media/
+/footage/
+/renders/
+/outputs/
+/cache/
+/tmp/
+
+# ---- Runtime state (memory layer, jobs, logs) ----
+*.db
+*.sqlite
+*.sqlite3
+*.db-wal
+*.db-shm
+/data/
+/logs/
+*.log
+backend/jobs/state/
+
+# ---- Agent tooling ----
+graphify-out/
+.mempalace/
+.claude/settings.local.json
+
+# ---- OS / editor ----
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
