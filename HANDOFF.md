@@ -26,14 +26,30 @@ contract, `docs/PLAN.md` for the full architecture essay.
 
 ## In flight
 
-- **Role B (backend).** `backend/core/config.py` + `backend/core/ws.py` exist (uncommitted,
-  `backend` branch). A subagent is building the rest: job queue + state machine, pluggable
-  executor (`RUSHCUT_EXECUTOR=simulated|comfy`), ComfyUI client, model manager,
-  `backend/app.py`, tests. Design intent: ONE app that runs simulated in the Codespace and
-  real on the GB10 — the mock then becomes contract-reference only.
-- **Role C (editor bake-off).** A subagent is cloning OpenCut (pre-rewrite commit) and
-  OpenChatCut into the Codespace at `/tmp/bakeoff/`, attempting installs/boots, and will
-  report a verdict with evidence. Vendoring the winner into `frontend/` is the follow-up.
+- **Role A enablement.** A subagent is finishing `scripts/` (BOX_RUNBOOK.md, setup_box.sh,
+  smoke_test.py exist; bakery.py pending). `docs/ONBOARD_ROLE_A.md` is the handoff packet
+  for the box teammate AND their laptop agent — visual checklist, requirements, gotchas,
+  and hard rules for the assisting agent.
+- **Waiting on humans:** teammates claim roles in `docs/ROLES.md`; the user authenticates
+  `claude` in the Codespace once; GitHub usernames → collaborator access (until then,
+  fork + PR).
+
+## Merged to main and verified (window 1+)
+
+- **Backend (Role B)** — `e328277`: job queue, full state machine incl. `policy_blocked`,
+  pluggable executor (`RUSHCUT_EXECUTOR=simulated|comfy`), ComfyUI client with `RUSHCUT_*`
+  node-title patching, model manager (70 GB cap, LRU, pin-safe). 18/18 tests **locally and
+  in the Codespace**; live job walked queued→complete with provenance.
+- **Agent (Role E)** — merged via `034126d`: 18 tools (7 direct / 4 propose / 7 plan),
+  ~160-line loop with a real plan-approval gate, router mounted in `app.py` (same HTTP
+  contract as the UI, no back door), `nemoclaw/egress-policy.yaml` = the air-gap demo
+  artifact. 25/25 combined suite; `/agent/tools` smoke-tested.
+- **Editor base (for Role C)** — bake-off verdict: **OpenCut @ `pre-rewrite` (238750c,
+  MIT)** over OpenChatCut (node-24 + onnxruntime fights, AGPL, agent runtime welded to its
+  own server). Vendored at `frontend/` (`55c1b34`) with `VENDOR.md` naming the three first
+  files for our panels. Toolchain: bun; app at `frontend/apps/web`.
+- Codespace git note: pushes over `gh codespace ssh` need `bash -lc` (login shell loads
+  GITHUB_TOKEN; plain ssh shells fail auth at push time).
 
 ## Done since previous update
 
