@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/resizable";
 import { AssetsPanel } from "@/components/editor/panels/assets";
 import { PropertiesPanel } from "@/components/editor/panels/properties";
+import { RushcutPanel } from "@/components/rushcut/rushcut-panel";
 import { Timeline } from "@/timeline/components";
 import { PreviewPanel } from "@/preview/components";
 import { EditorHeader } from "@/components/editor/editor-header";
@@ -156,6 +157,10 @@ function EditorLayout() {
 							panel: "properties",
 							size: sizes[2] ?? panels.properties,
 						});
+						setPanel({
+							panel: "rushcut",
+							size: sizes[3] ?? panels.rushcut,
+						});
 					}}
 				>
 					<ResizablePanel
@@ -190,6 +195,17 @@ function EditorLayout() {
 						className="min-w-0"
 					>
 						<PropertiesPanel />
+					</ResizablePanel>
+
+					<ResizableHandle withHandle />
+
+					<ResizablePanel
+						defaultSize={panels.rushcut}
+						minSize={12}
+						maxSize={45}
+						className="min-w-0"
+					>
+						<RushcutPanel />
 					</ResizablePanel>
 				</ResizablePanelGroup>
 			</ResizablePanel>

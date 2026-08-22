@@ -8,6 +8,7 @@ export interface PanelSizes {
 	properties: number;
 	mainContent: number;
 	timeline: number;
+	rushcut: number;
 }
 
 export type PanelId = keyof PanelSizes;
@@ -41,7 +42,7 @@ export const usePanelStore = create<PanelState>()(
 		}),
 		{
 			name: "panel-sizes",
-			version: 2,
+			version: 3,
 			migrate: (persistedState) => {
 				const state = persistedState as
 					| {
@@ -82,6 +83,7 @@ export const usePanelStore = create<PanelState>()(
 							PANEL_CONFIG.panels.properties,
 						mainContent: state.mainContent ?? PANEL_CONFIG.panels.mainContent,
 						timeline: state.timeline ?? PANEL_CONFIG.panels.timeline,
+						rushcut: PANEL_CONFIG.panels.rushcut,
 					},
 				};
 			},

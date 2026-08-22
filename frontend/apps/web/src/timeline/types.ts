@@ -35,7 +35,7 @@ interface BaseTrack {
 
 export interface VideoTrack extends BaseTrack {
 	type: "video";
-	elements: (VideoElement | ImageElement)[];
+	elements: (VideoElement | ImageElement | GenerativeElement)[];
 	muted: boolean;
 	hidden: boolean;
 }
@@ -161,6 +161,22 @@ export interface EffectElement extends BaseTimelineElement {
 	effectType: string;
 }
 
+export interface GenerativeElement extends BaseTimelineElement {
+	type: "generative";
+	/** Backend job driving this clip; live progress/state stream in over /ws. */
+	jobId: string;
+	model: string;
+	prompt: string;
+	seed: number;
+	/** Reference asset ids fed to the model (provenance, docs/api.md §2). */
+	refs: string[];
+	/** 0–1 snapshot at insert time; the rushcut jobs store supersedes it. */
+	progress: number;
+	state: string;
+	hidden?: boolean;
+	effects?: Effect[];
+}
+
 export type ElementUpdatePatch = { params?: Partial<ParamValues> };
 
 export type TimelineElement =
@@ -170,7 +186,8 @@ export type TimelineElement =
 	| TextElement
 	| StickerElement
 	| GraphicElement
-	| EffectElement;
+	| EffectElement
+	| GenerativeElement;
 
 export type ElementType = TimelineElement["type"];
 
@@ -216,6 +233,7 @@ export type CreateTextElement = Omit<TextElement, "id">;
 export type CreateStickerElement = Omit<StickerElement, "id">;
 export type CreateGraphicElement = Omit<GraphicElement, "id">;
 export type CreateEffectElement = Omit<EffectElement, "id">;
+export type CreateGenerativeElement = Omit<GenerativeElement, "id">;
 export type CreateTimelineElement =
 	| CreateAudioElement
 	| CreateVideoElement
@@ -223,7 +241,8 @@ export type CreateTimelineElement =
 	| CreateTextElement
 	| CreateStickerElement
 	| CreateGraphicElement
-	| CreateEffectElement;
+	| CreateEffectElement
+	| CreateGenerativeElement;
 
 export interface ElementDragState {
 	isDragging: boolean;

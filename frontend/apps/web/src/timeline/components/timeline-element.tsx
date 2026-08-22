@@ -23,6 +23,8 @@ import {
 	timelineTimeToSnappedPixels,
 } from "@/timeline";
 import { getTrackHeight } from "./track-layout";
+import { useRushcutStore } from "@/lib/rushcut/ws";
+import type { GenerativeElement } from "@/timeline/types";
 import { getTimelineElementClassName, TIMELINE_TRACK_THEME } from "./theme";
 import {
 	ContextMenu,
@@ -1178,7 +1180,55 @@ function ElementContent({ element, track }: ElementContentProps) {
 		case "video":
 		case "image":
 			return <TiledMediaContent element={element} track={track} />;
+		case "generative":
+			return <GenerativeElementContent element={element} />;
 	}
+}
+
+function GenerativeElementContent({
+	element,
+}: {
+	element: GenerativeElement;
+}) {
+	// Live subscription: whole Job objects stream in over /ws and land in
+	// the rushcut jobs store keyed by jobId; the element's stored snapshot
+	// is only the fallback before the first frame arrives.
+	const job = useRushcutStore((state) => state.jobs[element.jobId]);
+	const state = job?.state ?? element.state;
+	const progress = job?.progress ?? element.progress;
+	const isPending = state === "queued" || state === "running";
+	const isBlocked = state === "failed" || state === "policy_blocked";
+	const percent = Math.round(Math.min(Math.max(progress ?? 0, 0), 1) * 100);
+
+	return (
+		<div className="relative size-full overflow-hidden">
+			{isPending && (
+				<div
+					className="bg-primary/25 absolute inset-y-0 left-0 transition-[width] duration-300"
+					style={{ width: `${percent}%` }}
+				/>
+			)}
+			{isBlocked && <div className="bg-destructive/25 absolute inset-0" />}
+			<div className="relative flex h-full items-center gap-1.5 px-1.5">
+				<span className="text-foreground/90 truncate text-[0.65rem]">
+					{element.name}
+				</span>
+				<span className="shrink-0 rounded-sm bg-black/30 px-1 font-mono text-[0.55rem] text-white/80">
+					{element.model}
+				</span>
+				{isPending && (
+					<span className="text-foreground/70 shrink-0 text-[0.55rem]">
+						{state} {percent}%
+					</span>
+				)}
+				{isBlocked && (
+					<span className="text-destructive shrink-0 text-[0.55rem] font-medium">
+						{state === "policy_blocked" ? "policy blocked" : "failed"}
+					</span>
+				)}
+			</div>
+		</div>
+	);
 }
 
 function CopyMenuItem() {

@@ -350,5 +350,9 @@ export function getPropertiesConfig({
 			return getAudioConfig({ element });
 		case "effect":
 			return getEffectConfig({ element });
+		case "generative":
+			// In-flight generative clips have no editable properties yet;
+			// an empty config renders the properties panel's empty state.
+			return { defaultTab: "generative", tabs: [] };
 	}
 }

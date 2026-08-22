@@ -9,6 +9,7 @@ const webEnvSchema = z.object({
 	// Public
 	NEXT_PUBLIC_SITE_URL: z.url().default("http://localhost:3000"),
 	NEXT_PUBLIC_MARBLE_API_URL: z.url(),
+	NEXT_PUBLIC_BACKEND_URL: z.url().default("http://localhost:8000"),
 
 	// Server
 	DATABASE_URL: z.string().refine(
@@ -28,3 +29,11 @@ const webEnvSchema = z.object({
 export type WebEnv = z.infer<typeof webEnvSchema>;
 
 export const webEnv = webEnvSchema.parse(process.env);
+
+/** ws(s):// form of NEXT_PUBLIC_BACKEND_URL ending in /ws — the frame
+ * stream from docs/api.md §1. Server-side only; client code derives the
+ * same value in src/lib/rushcut/api.ts so NEXT_PUBLIC_ inlining works. */
+export const backendWsUrl = `${webEnv.NEXT_PUBLIC_BACKEND_URL.replace(
+	/^http/,
+	"ws",
+)}/ws`;
