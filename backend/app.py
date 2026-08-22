@@ -15,7 +15,7 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any
 
-from fastapi import APIRouter, FastAPI, Request, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
@@ -187,99 +187,21 @@ async def session_review(sid: str, request: Request, apply: bool = True) -> dict
 
 
 # ---------------------------------------------------------------- people
-# Role D territory — thin stub until backend/ingest lands, same canned people
-# as the mock, so the editor's cast panel keeps working today.
+# Role D's repo-backed cast endpoints (Mongo with in-memory fallback). The
+# canned stub this replaced lives in backend/mock/app.py for contract reference.
+from backend.ingest.router import router as ingest_router
 
-people_stub = APIRouter()
-
-PEOPLE: list[dict[str, Any]] = [
-    {
-        "_id": "per_dana",
-        "projectId": PROJECT_ID,
-        "name": "Dana",
-        "role": "principal",
-        "policy": "approved",
-        "refs": {
-            "face": "/media/refs/dana_face.jpg",
-            "body": "/media/refs/dana_body.jpg",
-            "wardrobe": "/media/refs/dana_wardrobe.jpg",
-        },
-        "consent": {
-            "recordUrl": "/media/consent/dana_signed.pdf",
-            "scope": "Project Atlas — corporate brand film, all media, 2 years",
-            "noticeAt": "2026-08-20T09:00:00Z",
-            "signedAt": "2026-08-22T08:15:00Z",
-            "revokedAt": None,
-        },
-    },
-    {
-        "_id": "per_marcus",
-        "projectId": PROJECT_ID,
-        "name": "Marcus",
-        "role": "principal",
-        "policy": "approved",
-        "refs": {
-            "face": "/media/refs/marcus_face.jpg",
-            "body": "/media/refs/marcus_body.jpg",
-            "wardrobe": "/media/refs/marcus_wardrobe.jpg",
-        },
-        "consent": {
-            "recordUrl": "/media/consent/marcus_signed.pdf",
-            "scope": "Project Atlas — corporate brand film, all media, 2 years",
-            "noticeAt": "2026-08-20T09:00:00Z",
-            "signedAt": "2026-08-22T08:20:00Z",
-            "revokedAt": None,
-        },
-    },
-    {
-        # The demo beat: an unknown face the human must approve or remove.
-        "_id": "per_unknown_1",
-        "projectId": PROJECT_ID,
-        "name": None,
-        "role": "background",
-        "policy": "unknown",
-        "refs": {
-            "face": "/media/refs/unknown_1_face.jpg",
-            "body": "/media/refs/unknown_1_body.jpg",
-            "wardrobe": None,
-        },
-        "consent": None,
-    },
-]
-
-
-class PolicyUpdate(BaseModel):
-    policy: str  # approved | unknown | remove
-    name: str | None = None
-
-
-@people_stub.get("/people")
-async def list_people(projectId: str = PROJECT_ID) -> list[dict[str, Any]]:
-    return [p for p in PEOPLE if p["projectId"] == projectId]
-
-
-@people_stub.post("/people/{person_id}/policy")
-async def set_policy(person_id: str, body: PolicyUpdate) -> dict[str, Any]:
-    for p in PEOPLE:
-        if p["_id"] == person_id:
-            p["policy"] = body.policy
-            if body.name:
-                p["name"] = body.name
-            return p
-    return _not_found(person_id)
-
-
-app.include_router(people_stub)
+app.include_router(ingest_router)
 
 # Role E's chat surface. The loop only ever reaches the timeline through the
 # same HTTP contract as the UI — no private back door.
-from backend.agent.router import router as agent_router  # noqa: E402
+from backend.agent.router import router as agent_router
 
 app.include_router(agent_router)
 
 # Render path: timeline JSON -> ffmpeg on the backend (the vendored editor's
 # own export stays unused by design).
-from backend.render.router import router as render_router  # noqa: E402
+from backend.render.router import router as render_router
 
 app.include_router(render_router)
 
