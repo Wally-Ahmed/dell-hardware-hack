@@ -1,0 +1,1 @@
+It starts with an editor any professional will recognize: a timeline, clips, a preview. We added three panels. An AI chat, where you talk to the agent. A Cast list, showing every person found in your footage. And a Models view, showing exactly what is loaded into the box's memory.

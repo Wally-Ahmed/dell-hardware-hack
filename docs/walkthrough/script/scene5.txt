@@ -1,0 +1,1 @@
+The agent has manners, tiered by how reversible things are. Small stuff, it just does. Real edits, it proposes: you preview them, and you apply them. And anything generative, anything expensive, requires a plan first. Which references, which model, how long. It runs only on approval. Nothing the agent does can bypass the human.

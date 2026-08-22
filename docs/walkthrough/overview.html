@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RushCut — an AI-native editor for professional filmmakers</title>
+<style>
+/* ---------- base ---------- */
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0a0b10; --panel:#10131b; --panel2:#0c0f17; --line:#232a3a;
+  --text:#e9edf5; --mut:#98a1b3;
+  --accent:#ffc46b; --accentdim:rgba(255,196,107,.35);
+  --ok:#4ade80; --warn:#fbbf24; --bad:#f87171;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);
+  font:16px/1.6 -apple-system,BlinkMacSystemFont,"SF Pro Text",Helvetica,Arial,sans-serif;
+  overflow-x:hidden}
+h1,h2,.pitch{font-family:"Iowan Old Style","Palatino","Georgia",serif}
+code{font-family:ui-monospace,"SF Mono",Menlo,monospace;font-size:.92em;color:var(--accent)}
+main{max-width:1100px;margin:0 auto;padding:0 26px 90px}
+section{padding:64px 0 10px}
+h2{font-size:34px;font-weight:700;letter-spacing:.2px;margin-bottom:6px}
+.lede{color:var(--mut);font-size:18px;margin-bottom:26px;max-width:62ch}
+.kicker{font:700 12px/1 ui-monospace,Menlo,monospace;letter-spacing:.28em;color:var(--accent);text-transform:uppercase}
+
+/* ---------- header ---------- */
+#top{position:sticky;top:0;z-index:50;height:64px;display:flex;align-items:center;gap:14px;
+  padding:0 22px;background:rgba(10,11,16,.86);backdrop-filter:blur(14px) saturate(150%);
+  border-bottom:1px solid var(--line)}
+#top .brand{font:800 17px/1 "Iowan Old Style","Palatino",Georgia,serif;letter-spacing:.4px}
+#top .brand b{color:var(--accent)}
+#top .tag{color:var(--mut);font-size:12.5px;border:1px solid var(--line);border-radius:999px;padding:4px 12px}
+#top .sp{flex:1}
+#tourbtn{background:rgba(255,196,107,.12);color:var(--accent);border:1px solid var(--accentdim);
+  border-radius:999px;padding:9px 18px;font:600 14px/1 -apple-system,Helvetica,sans-serif;cursor:pointer;
+  transition:background .2s}
+#tourbtn:hover{background:rgba(255,196,107,.22)}
+
+/* ---------- hero ---------- */
+#hero{padding:74px 0 34px;text-align:center}
+#hero h1{font-size:clamp(34px,5vw,54px);line-height:1.12;max-width:20ch;margin:14px auto 16px}
+#hero .sub{color:var(--mut);font-size:19px;max-width:56ch;margin:0 auto 22px}
+.chiprow{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+.chip{border:1px solid var(--line);background:var(--panel2);border-radius:999px;
+  padding:7px 16px;font-size:13.5px;color:var(--text);white-space:nowrap}
+.chip b{color:var(--accent);font-weight:600}
+#heroplay{margin-top:30px;display:inline-flex;flex-direction:column;align-items:center;gap:8px}
+#heroplay button{background:var(--accent);color:#161006;border:none;border-radius:999px;
+  padding:15px 34px;font:700 16.5px/1 -apple-system,Helvetica,sans-serif;cursor:pointer;
+  box-shadow:0 10px 40px -8px rgba(255,196,107,.45);transition:transform .15s}
+#heroplay button:hover{transform:translateY(-1px)}
+#heroplay .hint{color:var(--mut);font-size:12.5px}
+body.touring #heroplay{visibility:hidden}
+
+/* ---------- cards & diagram ---------- */
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 22px}
+.card h3{font-size:17.5px;margin-bottom:6px}
+.card p{color:var(--mut);font-size:14.5px;line-height:1.55}
+.card .em{color:var(--text)}
+.wide{grid-column:1/-1}
+.card.warnline{border-color:rgba(248,113,113,.5);background:linear-gradient(180deg,rgba(248,113,113,.07),var(--panel))}
+.card.goldline{border-color:var(--accentdim)}
+.ico{font-size:20px;margin-bottom:8px;display:block}
+
+/* one box */
+.gbbox{border:1.5px solid var(--accentdim);border-radius:18px;padding:26px;background:
+  radial-gradient(120% 130% at 50% 0%,rgba(255,196,107,.06),transparent 60%),var(--panel2)}
+.gbbox .boxlabel{display:flex;justify-content:center;margin-bottom:18px}
+.gbbox .boxlabel span{font:700 12.5px/1 ui-monospace,Menlo,monospace;letter-spacing:.14em;color:var(--accent);
+  border:1px solid var(--accentdim);border-radius:999px;padding:6px 16px}
+.gbgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.gbgrid .card{text-align:center}
+.egress{margin-top:16px;border:1px dashed rgba(74,222,128,.5);border-radius:12px;padding:14px 18px;
+  text-align:center;color:var(--mut);font-size:14.5px;background:rgba(74,222,128,.04)}
+.egress b{color:var(--ok)}
+
+/* architecture diagram */
+.arch{display:grid;grid-template-columns:1.15fr 1.15fr 1fr;gap:16px;align-items:stretch}
+.abox{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.abox h3{font-size:16.5px;margin-bottom:4px}
+.abox p{color:var(--mut);font-size:13.5px;line-height:1.5}
+.pchips{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.pchip{border:1px solid var(--line);background:var(--panel2);border-radius:10px;padding:9px 13px;
+  font-size:13.5px;display:flex;gap:9px;align-items:center}
+.pchip small{color:var(--mut);font-size:12px}
+.doorcol{display:flex;flex-direction:column;gap:10px}
+.doorway{border:1px solid var(--accentdim);background:rgba(255,196,107,.05);border-radius:14px;
+  padding:14px 16px;text-align:center}
+.doorway .srcs{display:flex;gap:8px;justify-content:center;margin-bottom:8px;flex-wrap:wrap}
+.doorway .srcs span{border:1px solid var(--line);border-radius:999px;padding:4px 11px;font-size:12px;color:var(--mut)}
+.doorway .conv{color:var(--accent);font-size:15px;line-height:1;margin-bottom:6px}
+.doorway b{display:block;font-size:14px;letter-spacing:.12em;color:var(--accent)}
+.doorway small{color:var(--mut);font-size:12.5px}
+.darr{text-align:center;color:var(--accent);font-size:18px;line-height:1}
+.stackcol{display:flex;flex-direction:column;gap:14px}
+.stackcol .abox{flex:1}
+
+/* manners */
+.tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.tier{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px 22px;position:relative}
+.tier .lvl{position:absolute;top:-11px;left:18px;font:700 11px/1 ui-monospace,Menlo,monospace;
+  letter-spacing:.14em;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:5px 11px;color:var(--mut)}
+.tier h3{font-size:16.5px;margin:4px 0 6px}
+.tier .does{color:var(--accent);font-weight:600;font-size:14.5px;margin-bottom:6px}
+.tier p{color:var(--mut);font-size:13.5px;line-height:1.55}
+.mfoot{margin-top:18px;text-align:center;border:1px solid var(--accentdim);border-radius:12px;
+  padding:14px;font-size:16px;background:rgba(255,196,107,.05)}
+.mfoot b{color:var(--accent)}
+
+/* consent */
+.crow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.statusrow{display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.status{flex:1;min-width:190px;border-radius:12px;padding:13px 18px;font-weight:600;font-size:14.5px;
+  border:1px solid var(--line);background:var(--panel);display:flex;align-items:center;gap:10px}
+.status small{font-weight:400;color:var(--mut);font-size:12.5px}
+.status .dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto}
+.status.ok{border-color:rgba(74,222,128,.55)} .status.ok .dot{background:var(--ok)}
+.status.warn{border-color:rgba(251,191,36,.6);background:rgba(251,191,36,.06)} .status.warn .dot{background:var(--warn)}
+.status.bad{border-color:rgba(248,113,113,.5)} .status.bad .dot{background:var(--bad)}
+.pledge{margin-top:14px;border:1px solid var(--line);border-radius:14px;padding:16px 20px;
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;background:var(--panel2)}
+.pledge .never{color:var(--mut);font-size:13.5px}
+.pledge .never s{color:var(--bad)}
+.pledge .p{border:1px solid var(--accentdim);color:var(--accent);border-radius:999px;padding:7px 16px;
+  font-weight:600;font-size:14px}
+
+/* close */
+#close{text-align:center;padding-bottom:20px}
+#close .chiprow{margin:18px 0 34px}
+.pitch{font-size:clamp(30px,4.6vw,46px);line-height:1.2;max-width:24ch;margin:0 auto}
+.pitch .p1{display:block}
+.pitch .p2{display:block;color:var(--accent)}
+#close .fin{color:var(--mut);font-size:14px;margin-top:26px}
+#replay{margin-top:22px;background:none;border:1px solid var(--accentdim);color:var(--accent);
+  border-radius:999px;padding:10px 22px;font:600 14px/1 -apple-system,Helvetica,sans-serif;cursor:pointer}
+
+footer{border-top:1px solid var(--line);color:var(--mut);font-size:12.5px;text-align:center;padding:26px 0 60px;margin-top:70px}
+
+/* ---------- reveal cascade (JS adds .rv; no-JS renders fully) ---------- */
+@media (prefers-reduced-motion:no-preference){
+  .rv{opacity:0;transform:translateY(12px);transition:opacity .55s ease,transform .55s ease;transition-delay:var(--rvd,0ms)}
+  .rv.in{opacity:1;transform:none}
+}
+
+/* ---------- narration-beat stepping (after .rv so it overrides) ---------- */
+.stepping .stepu{opacity:.38;transition:opacity .45s ease,box-shadow .45s ease,transform .45s ease;transition-delay:0ms}
+.stepping .stepu.steplit{opacity:1;box-shadow:0 0 0 1px rgba(255,196,107,.65),0 10px 34px -10px rgba(255,196,107,.28);transform:translateY(-2px)}
+
+/* ---------- tour chrome ---------- */
+.caption{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);
+  background:rgba(12,10,6,.85);backdrop-filter:blur(16px) saturate(160%);
+  border:1px solid var(--accent);border-radius:14px;padding:16px 30px;
+  font-size:17px;font-weight:700;color:var(--text);
+  opacity:0;transition:opacity 1.1s ease,transform 1.1s ease;z-index:100;
+  max-width:82vw;text-align:center;pointer-events:none}
+.caption.show{opacity:1;transform:translateX(-50%) translateY(0);transition:opacity .4s,transform .4s}
+.caption b{color:var(--accent)}
+
+.scenevis{position:relative;width:100%;height:clamp(200px,30vh,320px);
+  border:1px solid rgba(255,196,107,.5);border-radius:14px;overflow:hidden;background:#07080c;
+  display:none;margin-bottom:2px}
+.scenevis.show{display:block;animation:fadein .4s ease;position:sticky;top:64px;z-index:30}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.scenevis .frame{position:absolute;inset:0}
+.scenevis .frame img,.scenevis .frame video{position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;opacity:0;transition:opacity .8s}
+.scenevis .frame img.on{opacity:1;animation:kenburns 16s ease-in-out forwards}
+@keyframes kenburns{from{transform:scale(1.03) translate(0,0)}to{transform:scale(1.17) translate(-2.5%,-2%)}}
+/* float popup = clone of the docked strip's pinned geometry (auto margins, never translateX) */
+.scenevis.float{position:fixed;left:0;right:0;margin:0 auto;top:64px;width:min(1048px,calc(100vw - 52px));z-index:55}
+
+.tourbar{position:fixed;right:14px;top:50%;transform:translateY(-50%) translateX(16px);
+  display:flex;flex-direction:column;align-items:center;gap:10px;padding:10px 7px;
+  border-radius:999px;background:rgba(14,12,8,.92);border:1px solid rgba(255,196,107,.35);
+  z-index:60;opacity:0;pointer-events:none;transition:opacity .3s,transform .3s;height:min(70vh,540px)}
+.tourbar.show{opacity:1;transform:translateY(-50%) translateX(0);pointer-events:auto}
+.tourbar .pp{width:30px;height:30px;border-radius:50%;border:1px solid var(--accent);flex:0 0 auto;
+  background:rgba(255,196,107,.12);color:var(--accent);font-size:11px;cursor:pointer}
+.tourbar .tsegs{display:flex;flex-direction:column;gap:4px;flex:1;min-height:0;width:14px}
+.tseg{width:14px;flex:1 1 8px;min-height:5px;border-radius:3px;cursor:pointer;border:none;padding:0;
+  background:rgba(148,163,184,.28);transition:background .25s,transform .15s}
+.tseg:hover{transform:scaleX(1.5)}
+.tseg.done{background:rgba(255,196,107,.38)}
+.tseg.active{background:var(--accent);box-shadow:0 0 8px rgba(255,196,107,.8)}
+
+/* paused tour hands the page back */
+.tourpaused .scenevis{display:none}
+.tourpaused .caption{opacity:0}
+.tourpaused .stepping .stepu{opacity:1;box-shadow:none;transform:none}
+
+/* short viewports (real 16:9 screens lose ~130-180px to chrome) */
+@media (max-height:1000px){
+  .scenevis{height:clamp(150px,20vh,320px)}
+  .scenevis .frame img,.scenevis .frame video{object-fit:contain}
+  .caption{bottom:10px;padding:9px 20px;font-size:14.5px}
+}
+@media (max-width:900px){
+  .grid3,.tiers,.gbgrid,.arch,.crow{grid-template-columns:1fr}
+  .statusrow{flex-direction:column}
+}
+</style>
+</head>
+<body>
+
+<header id="top">
+  <span class="brand">Rush<b>Cut</b></span>
+  <span class="tag">an AI-native editor for professional filmmakers</span>
+  <span class="sp"></span>
+  <button id="tourbtn">▶ Narrated walkthrough</button>
+</header>
+
+<main>
+
+<section id="hero">
+  <span class="kicker">Hackathon build · one day · one box</span>
+  <h1>The AI comes to the footage.<br>The footage never leaves.</h1>
+  <p class="sub">A professional video editor where an AI agent works <em>beside</em> the editor —
+  recreating shots, rewriting scenes, and answering for every face that appears on screen.</p>
+  <div class="chiprow">
+    <span class="chip">🎬 A real editor, not a demo site</span>
+    <span class="chip">📦 Everything on <b>one NVIDIA GB10</b></span>
+    <span class="chip">🔓 Open source · GPL-3</span>
+  </div>
+  <div id="heroplay">
+    <button id="heroplaybtn">▶&nbsp; Play the walkthrough — 2½ minutes</button>
+    <span class="hint">narrated with voice — turn your sound on</span>
+  </div>
+</section>
+
+<section id="problem">
+  <span class="kicker">01 · The problem</span>
+  <h2>The magic exists. It just lives in the wrong place.</h2>
+  <p class="lede">Generative AI can already do things no reshoot budget can. But it can't come to
+  where films are actually made.</p>
+  <div class="grid3">
+    <div class="card rvu pu"><span class="ico">🎥</span><h3>Re-angle the shot</h3>
+      <p>Recreate a shot from an angle <span class="em">nobody filmed</span> on the day.</p></div>
+    <div class="card rvu pu"><span class="ico">✂️</span><h3>Rewrite the scene</h3>
+      <p>Change <span class="em">what happened</span> inside a shot, after the fact.</p></div>
+    <div class="card rvu pu"><span class="ico">🎭</span><h3>Add a character</h3>
+      <p>Insert someone who was <span class="em">never on set</span>.</p></div>
+    <div class="card wide goldline rvu pu"><h3>…but none of it lives inside a professional editor</h3>
+      <p>It exists as research demos and cloud services — <span class="em">and none of it runs on a
+      machine you own.</span></p></div>
+    <div class="card wide warnline rvu pu"><span class="ico">🔒</span><h3>And the cloud is not an option</h3>
+      <p>Unreleased footage is the most <span class="em">legally sensitive asset</span> a production has.
+      Studios cannot upload it to cloud AI services — so the people who need this most can't use any of it.</p></div>
+  </div>
+</section>
+
+<section id="product">
+  <span class="kicker">02 · The product</span>
+  <h2>One box. The whole pipeline.</h2>
+  <p class="lede">RushCut puts an AI agent beside the editor — not behind a menu — and runs
+  everything on a single machine that sits in your building.</p>
+  <div class="gbbox rvu">
+    <div class="boxlabel"><span>ONE NVIDIA GB10 · 128 GB UNIFIED MEMORY</span></div>
+    <div class="gbgrid">
+      <div class="card rvu du"><span class="ico">🎬</span><h3>The editor</h3><p>with an AI agent working beside you</p></div>
+      <div class="card rvu du"><span class="ico">🧠</span><h3>The brain</h3><p>a local AI that talks and sees</p></div>
+      <div class="card rvu du"><span class="ico">⚙️</span><h3>The generation engine</h3><p>makes the new footage</p></div>
+      <div class="card rvu du"><span class="ico">🎞️</span><h3>Your footage</h3><p>never uploaded anywhere</p></div>
+    </div>
+    <div class="egress rvu du"><b>Nothing leaves the building — and we can prove it.</b>
+      The agent runs sandboxed, with an allowlist we can put on screen: it can reach our backend, and nothing else.</div>
+  </div>
+</section>
+
+<section id="arch">
+  <span class="kicker">03 · How it works</span>
+  <h2>Four pieces, one doorway.</h2>
+  <p class="lede">Plain and simple: the part you see, the part that keeps it honest, the part that
+  thinks, and the part that makes footage.</p>
+  <div class="arch">
+    <div class="abox rvu au"><h3>🎬 The editor</h3>
+      <p>The familiar part — timeline, clips, preview. Plus three new panels:</p>
+      <div class="pchips">
+        <div class="pchip au">💬 <span>AI chat <small>— talk to the agent about your cut</small></span></div>
+        <div class="pchip au">👥 <span>Cast <small>— every person found in your footage</small></span></div>
+        <div class="pchip au">📦 <span>Models <small>— what's loaded in the box's memory</small></span></div>
+      </div>
+    </div>
+    <div class="doorcol">
+      <div class="doorway rvu au">
+        <div class="srcs"><span>the editor's clicks</span><span>the agent's requests</span></div>
+        <div class="conv">↘&nbsp;&nbsp;↙</div>
+        <b>ONE DOORWAY</b>
+        <small>human and agent use the same door — so everything is logged, and everything can be undone</small>
+      </div>
+      <div class="darr">↓</div>
+      <div class="abox rvu au"><h3>🗂 The backend</h3>
+        <p>Treats every slow thing as a <span class="em">job with a progress bar</span> — you can watch it,
+        cancel it, or undo it.</p></div>
+    </div>
+    <div class="stackcol">
+      <div class="abox rvu au"><h3>🧠 The brain</h3>
+        <p>A local AI that <span class="em">talks and sees</span> — it reads your footage and answers in the chat.</p></div>
+      <div class="abox rvu au"><h3>⚙️ The generation engine</h3>
+        <p>Makes the new footage — a fast <span class="em">draft first</span>, the finished version in the background.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="manners">
+  <span class="kicker">04 · The agent's manners</span>
+  <h2>Permission, tiered by reversibility.</h2>
+  <p class="lede">The agent is helpful, not headstrong. What it's allowed to do depends on how
+  easily it can be taken back.</p>
+  <div class="tiers">
+    <div class="tier rvu mu"><span class="lvl">TIER 1</span><h3>Small &amp; reversible</h3>
+      <p class="does">It just does it.</p>
+      <p>Looking things up, tidying names — anything trivial to reverse.</p></div>
+    <div class="tier rvu mu"><span class="lvl">TIER 2</span><h3>Real edits</h3>
+      <p class="does">It proposes — you apply.</p>
+      <p>The agent drafts the change, you preview it, and it lands as <span class="em">one undo step</span>.</p></div>
+    <div class="tier rvu mu"><span class="lvl">TIER 3</span><h3>Generative &amp; expensive</h3>
+      <p class="does">Plan first. Runs on approval.</p>
+      <p>It must show which references, which model, and how long — <span class="em">before</span> anything runs.</p></div>
+  </div>
+  <div class="mfoot rvu mu">Nothing the agent does can <b>bypass the human</b>.</div>
+</section>
+
+<section id="consent">
+  <span class="kicker">05 · The differentiator</span>
+  <h2>The consent registry.</h2>
+  <p class="lede">The feature we protect above all others: every face on screen is accounted for —
+  foreground or deep background, real or generated.</p>
+  <div class="card wide rvu cu"><span class="ico">👁️</span><h3>Every person is detected</h3>
+    <p>Each face in the footage is found, matched into an identity, and given a status.</p></div>
+  <div class="statusrow" style="margin-top:14px">
+    <div class="status ok rvu cu"><span class="dot"></span>Approved <small>cleared to appear</small></div>
+    <div class="status warn rvu cu"><span class="dot"></span>Unknown <small>never silently passed</small></div>
+    <div class="status bad rvu cu"><span class="dot"></span>Remove <small>taken out of the shot</small></div>
+  </div>
+  <div class="crow">
+    <div class="card rvu cu"><span class="ico">🔁</span><h3>Output is re-checked</h3>
+      <p>Every generated clip is scanned again before it can land in the cut — an
+      <span class="em">unapproved face cannot ship</span>, even if a model hallucinates one.</p></div>
+    <div class="card rvu cu"><span class="ico">⛔</span><h3>Refused before it starts</h3>
+      <p>Ask for a shot with someone unapproved, and the request is refused
+      <span class="em">before the expensive generation even begins</span>.</p></div>
+  </div>
+  <div class="card wide rvu cu"><span class="ico">🧾</span><h3>Every generated file carries its receipt</h3>
+    <p>What made it · from what · <span class="em">approved by whom</span>.</p></div>
+  <div class="pledge rvu cu">
+    <span class="never">We never say <s>guaranteed</s> — professionals know better. We say:</span>
+    <span class="p">Policy-enforced</span><span class="p">Audited</span><span class="p">Human-signed-off</span>
+  </div>
+</section>
+
+<section id="close">
+  <span class="kicker">06 · The close</span>
+  <div class="chiprow">
+    <span class="chip rvu xu">⏱ Built in <b>one day</b></span>
+    <span class="chip rvu xu">🤝 Humans + AI agents on <b>parallel branches</b></span>
+    <span class="chip rvu xu">🔓 Open source · <b>GPL-3</b></span>
+  </div>
+  <p class="pitch"><span class="p1 rvu xu">Nothing left the building,</span>
+  <span class="p2 rvu xu">and nobody unapproved appears.</span></p>
+  <p class="fin">RushCut — an AI-native editor for professional filmmakers.</p>
+  <button id="replay">▶ Replay the walkthrough</button>
+</section>
+
+</main>
+
+<footer>RushCut · hackathon build · everything on one box</footer>
+<div class="caption" id="caption"></div>
+<div id="buildtag" style="position:fixed;left:10px;bottom:6px;z-index:5;font:10px ui-monospace,monospace;color:#5a637755;pointer-events:none">build local · 20:26Z · 7 scenes</div>
+
+<script>
+/* ================= reveal cascade ================= */
+(()=>{
+  if(!("IntersectionObserver" in window)) return;
+  const units = document.querySelectorAll(".rvu");
+  units.forEach(el=>{
+    const sibs = el.parentElement ? [...el.parentElement.children] : [el];
+    el.style.setProperty("--rvd", (sibs.indexOf(el) % 8) * 60 + "ms");
+    el.classList.add("rv");
+  });
+  const io = new IntersectionObserver(es=>es.forEach(e=>{
+    if(e.isIntersecting){ e.target.classList.add("in"); io.unobserve(e.target); }
+  }), {threshold:.12});
+  units.forEach(el=>io.observe(el));
+  window.revealReplay = root=>{
+    if(!root) return;
+    const els = root.querySelectorAll(".rv");
+    if(!els.length) return;
+    els.forEach(el=>{ el.style.transition = "none"; el.classList.remove("in"); });
+    void els[0].offsetWidth;
+    requestAnimationFrame(()=>els.forEach(el=>{ el.style.transition = ""; el.classList.add("in"); }));
+  };
+})();
+
+/* ================= tour engine ================= */
+function rich(target, text){
+  target.replaceChildren();
+  for(const part of text.split(/(\*\*[^*]+\*\*|`[^`]+`)/g)){
+    if(part.startsWith("**") && part.endsWith("**")){
+      const b=document.createElement("b"); b.textContent=part.slice(2,-2); target.appendChild(b);
+    }else if(part.startsWith("`") && part.endsWith("`")){
+      const c=document.createElement("code"); c.textContent=part.slice(1,-1); target.appendChild(c);
+    }else if(part) target.appendChild(document.createTextNode(part));
+  }
+}
+
+/* the strip's host must be TALL (sticky children only travel within their parent) — use <main> */
+const HOST = document.querySelector("main");
+const captionEl = document.getElementById("caption"), tourbtn = document.getElementById("tourbtn");
+
+const vis = document.createElement("div"); vis.className = "scenevis";
+const visFrame = document.createElement("div"); visFrame.className = "frame";
+const visA = new Image(), visB = new Image();
+const visV = document.createElement("video");
+visV.muted = true; visV.loop = true; visV.playsInline = true;
+visFrame.append(visA, visB, visV); vis.appendChild(visFrame);
+HOST.insertBefore(vis, HOST.firstChild);
+let visFront = visA, visVWasPlaying = false;
+
+function sceneVis(n, fit, pop){
+  if(n == null){ vis.classList.remove("show");
+    visA.classList.remove("on"); visB.classList.remove("on");
+    visV.style.opacity = 0; visV.pause(); visV.removeAttribute("src"); return; }
+  vis.classList.toggle("float", !!pop);
+  if(pop){ if(vis.parentElement !== document.body) document.body.appendChild(vis); }
+  else if(vis.parentElement !== HOST) HOST.insertBefore(vis, HOST.firstChild);
+  vis.classList.add("show");   /* synchronously — the focus scroll needs final layout NOW */
+  visV.style.objectFit = fit || ""; visA.style.objectFit = fit || ""; visB.style.objectFit = fit || "";
+  visV.style.opacity = 0; visV.pause();
+  visV.onloadeddata = ()=>{ visV.style.opacity = 1; visV.play().catch(()=>{}); vis.classList.add("show"); };
+  visV.onerror = ()=>{};
+  visV.src = "walkthrough/img/scene"+n+".mp4";
+  if(fit){ visA.classList.remove("on"); visB.classList.remove("on"); return; }
+  const back = visFront === visA ? visB : visA;
+  back.classList.remove("on");
+  back.onload = ()=>{ visFront.classList.remove("on"); back.classList.add("on"); visFront = back; vis.classList.add("show"); };
+  back.onerror = ()=>{};
+  back.src = "walkthrough/img/scene"+n+".png";
+}
+
+let tourOn=false, tourTimers=[], tourAudio=null, tourResolve=null, tourIdx=0, tourJumped=false, tourPaused=false;
+let capTimer=null, capMs=0, capArmed=0, capRemain=0;
+function caption(txt){
+  clearTimeout(capTimer); capRemain = 0;
+  if(txt===null){ captionEl.classList.remove("show"); return; }
+  rich(captionEl, txt); captionEl.classList.add("show");
+  capMs = Math.min(6000, 2800 + 28*txt.length); capArmed = Date.now();
+  capTimer = setTimeout(()=>captionEl.classList.remove("show"), capMs);
+}
+function tlater(fn, ms){ const e = { fn, fireAt: Date.now() + ms, remain: null }; e.id = setTimeout(fn, ms); tourTimers.push(e); }
+
+let fbTimer=null, fbCb=null, fbRemain=0, fbArmed=0;
+function armFallback(cb, ms){ clearTimeout(fbTimer); fbCb = cb; fbRemain = ms; fbArmed = Date.now(); fbTimer = setTimeout(cb, ms); }
+function clearFallback(){ clearTimeout(fbTimer); fbTimer = null; fbCb = null; fbRemain = 0; }
+
+function playScene(n){
+  return new Promise(resolve=>{
+    let settled = false;
+    const done = ()=>{ if(!settled){ settled = true; clearFallback(); if(tourResolve===done) tourResolve = null; resolve(); } };
+    tourResolve = done;
+    tourAudio = new Audio("walkthrough/scene"+n+".mp3");
+    tourAudio.addEventListener("ended", done);
+    tourAudio.addEventListener("error", ()=>{ if(!settled) armFallback(done, 9000); });
+    tourAudio.play().catch(()=>{ if(!settled) armFallback(done, 9000); });
+  });
+}
+
+/* ---------- narration-beat choreography ---------- */
+function stepClear(){
+  document.querySelectorAll(".stepping").forEach(e=>e.classList.remove("stepping"));
+  document.querySelectorAll(".stepu").forEach(e=>e.classList.remove("stepu","steplit"));
+}
+function choreo(rootSel, unitSel, seq, endMs){
+  const root = document.querySelector(rootSel); if(!root) return;
+  const units = [...root.querySelectorAll(unitSel)]; if(!units.length) return;
+  tlater(()=>{ root.classList.add("stepping"); units.forEach(u=>u.classList.add("stepu")); }, Math.max(0, seq[0].t - 400));
+  seq.forEach(st=>tlater(()=>{
+    let lit;
+    if(st.i === "*") lit = units;
+    else if(typeof st.i === "string") lit = [...root.querySelectorAll(st.i)];
+    else lit = [].concat(st.i).map(j=>units[j]).filter(Boolean);
+    units.forEach(u=>u.classList.toggle("steplit", lit.includes(u)));
+  }, st.t));
+  tlater(()=>{ root.classList.remove("stepping"); units.forEach(u=>u.classList.remove("steplit")); }, endMs);
+}
+
+/* ---------- TOUR — scene IDs are stable; beats from word-level STT of each mp3 ---------- */
+const TOUR = [
+  { cap:"**The problem** — the AI can't come to the footage",
+    foc:"#problem", fb:"start", n:1,
+    run(){ choreo("#problem",".pu",[
+      {t:1400,i:0},{t:4200,i:1},{t:6200,i:2},{t:9000,i:3},{t:15900,i:4},{t:22600,i:"*"}],24200); } },
+
+  { cap:"**RushCut** — everything on one box",
+    foc:"#product", fb:"start", n:2,
+    run(){ choreo("#product",".du",[
+      {t:3400,i:0},{t:8000,i:1},{t:8700,i:2},{t:9900,i:3},{t:13800,i:4},{t:15600,i:"*"}],16300); } },
+
+  { cap:"**The editor you know** — plus three new panels",
+    foc:"#arch", fb:"start", n:3,
+    run(){ choreo("#arch",".au",[
+      {t:900,i:0},{t:7700,i:[0,1]},{t:10500,i:[0,2]},{t:14200,i:[0,3]},{t:16100,i:[0,1,2,3]}],18100); } },
+
+  { cap:"**One doorway** — logged, and undoable",
+    foc:"#arch", fb:"start", vis:null, n:4,
+    run(){ choreo("#arch",".au",[
+      {t:2900,i:5},{t:9700,i:[4,5]},{t:16400,i:6},{t:19000,i:7},{t:20500,i:"*"}],21500); } },
+
+  { cap:"**Three permission levels**, by reversibility",
+    foc:"#manners", fb:"start", vis:null, n:5,
+    run(){ choreo("#manners",".mu",[
+      {t:3800,i:0},{t:6000,i:1},{t:10200,i:2},{t:18700,i:3}],21100); } },
+
+  { cap:"**The consent registry** — nobody unapproved ships",
+    foc:"#consent", fb:"start", n:6,
+    run(){ choreo("#consent",".cu",[
+      {t:4300,i:0},{t:6500,i:1},{t:7300,i:2},{t:8100,i:3},{t:9400,i:2},{t:11800,i:4},
+      {t:16200,i:5},{t:22900,i:6},{t:28500,i:7}],31800); } },
+
+  { cap:"**One day** · open source · GPL-3",
+    foc:"#close", vis:null, n:7,
+    run(){ choreo("#close",".xu",[
+      {t:900,i:0},{t:2100,i:1},{t:6900,i:2},{t:11800,i:3},{t:12900,i:[3,4]},{t:14700,i:"*"}],15700); } },
+];
+
+/* ---------- transport bar ---------- */
+const tourbar = document.createElement("div"); tourbar.className = "tourbar";
+const ppBtn = document.createElement("button"); ppBtn.className = "pp"; ppBtn.textContent = "❚❚";
+const segsBox = document.createElement("div"); segsBox.className = "tsegs";
+tourbar.append(ppBtn, segsBox); document.body.appendChild(tourbar);
+const tsegs = TOUR.map((s,i)=>{
+  const b = document.createElement("button"); b.className = "tseg"; b.type = "button";
+  b.title = (i+1)+" / "+TOUR.length+" — "+s.cap.replace(/\*\*/g,"");
+  b.addEventListener("click", ()=>jumpTo(i)); segsBox.appendChild(b); return b;
+});
+function markSeg(i){ tsegs.forEach((s,j)=>{ s.classList.toggle("active", j===i); s.classList.toggle("done", i>=0 && j<i); }); }
+
+/* ---------- the tour loop ---------- */
+async function tour(start){
+  if(tourOn){ stopTour(); return; }
+  if(document.fullscreenEnabled && !document.fullscreenElement && document.documentElement.requestFullscreen){
+    try{ document.documentElement.requestFullscreen({navigationUI:"hide"}).catch(()=>{}); }catch(e){}
+  }
+  tourOn = true; tourPaused = false; ppBtn.textContent = "❚❚";
+  document.body.classList.add("touring");
+  tourbtn.textContent = "■ Stop walkthrough"; tourbar.classList.add("show");
+  mediaKeysOn();
+  tourIdx = Number.isInteger(start) ? start : 0;
+  while(tourOn && tourIdx < TOUR.length){
+    const i = tourIdx, scene = TOUR[i];
+    tourJumped = false;
+    markSeg(i);
+    stepClear();
+    caption(scene.cap);
+    mediaMeta(scene.cap);
+    sceneVis(scene.vis === undefined ? scene.n : scene.vis, scene.fit, scene.pop);
+    scene.run();
+    if(scene.foc) tlater(()=>{
+      const el = document.querySelector(scene.foc); if(!el) return;
+      const hasVis = (scene.vis === undefined ? scene.n : scene.vis) != null;
+      const inFlow = hasVis && !scene.pop;
+      const barH = document.querySelector("#top")?.offsetHeight || 64;
+      let stickyTop = 64, clear;
+      if(hasVis){
+        if(!vis.offsetHeight) vis.style.display = "block";
+        const stripH = vis.offsetHeight;
+        const st = parseFloat(getComputedStyle(vis).top);
+        vis.style.display = "";
+        if(!isNaN(st)) stickyTop = st;
+        clear = stickyTop + stripH + 14;
+      } else {
+        clear = barH + 14;
+      }
+      const r = el.getBoundingClientRect();
+      const targetY = scene.fb === "start" ? clear : Math.max((innerHeight - r.height)/2, clear);
+      let top = r.top + window.scrollY - targetY;
+      if(scene.fb === "start"){
+        const prev = el.previousElementSibling;
+        if(prev) top = Math.max(top, prev.getBoundingClientRect().bottom + window.scrollY - (clear - 14));
+      }
+      /* scroll floor: measure the strip's NATURAL slot (sticky displacement removed) */
+      if(inFlow){
+        vis.style.position = "static";
+        let natTop = 0, oe = vis;
+        while(oe){ natTop += oe.offsetTop; oe = oe.offsetParent; }
+        vis.style.position = "";
+        top = Math.max(top, natTop - stickyTop);
+      }
+      window.scrollTo({top: Math.max(0, top), behavior:"smooth"});
+      if(window.revealReplay) revealReplay(el);
+    }, 400);
+    await playScene(scene.n);
+    tourTimers.forEach(e=>clearTimeout(e.id)); tourTimers = [];
+    if(!tourJumped) tourIdx = i + 1;
+  }
+  if(tourOn) stopTour();
+}
+function jumpTo(i){
+  if(!tourOn){ tour(i); return; }
+  tourJumped = true; tourIdx = i;
+  tourPaused = false; ppBtn.textContent = "❚❚";
+  document.body.classList.remove("tourpaused");
+  if(tourAudio){ tourAudio.pause(); tourAudio = null; }
+  tourTimers.forEach(e=>clearTimeout(e.id)); tourTimers = [];
+  if(tourResolve) tourResolve();
+}
+
+/* ---------- pause / resume ---------- */
+function pauseTour(){
+  if(!tourOn || tourPaused || !tourAudio) return;
+  tourPaused = true; ppBtn.textContent = "▶";
+  tourAudio.pause();
+  if(fbTimer){ clearTimeout(fbTimer); fbTimer = null; fbRemain = Math.max(0, fbRemain - (Date.now() - fbArmed)); }
+  visVWasPlaying = !visV.paused; if(visVWasPlaying) visV.pause();
+  if(capTimer){ clearTimeout(capTimer); capRemain = Math.max(0, capMs - (Date.now() - capArmed)); }
+  tourTimers.forEach(e=>{ clearTimeout(e.id); e.remain = Math.max(0, e.fireAt - Date.now()); });
+  document.body.classList.add("tourpaused");
+  if(document.fullscreenElement && document.exitFullscreen){ document.exitFullscreen().catch(()=>{}); }
+  mediaState("paused");
+}
+function resumeTour(){
+  if(!tourOn || !tourPaused || !tourAudio) return;
+  tourPaused = false; ppBtn.textContent = "❚❚";
+  tourAudio.play().catch(()=>{});
+  if(fbCb && fbRemain > 0) armFallback(fbCb, fbRemain);
+  if(visVWasPlaying){ visV.play().catch(()=>{}); visVWasPlaying = false; }
+  if(capRemain > 0){ capMs = capRemain; capArmed = Date.now();
+    capTimer = setTimeout(()=>captionEl.classList.remove("show"), capRemain); capRemain = 0; }
+  tourTimers.forEach(e=>{ if(e.remain != null){ e.fireAt = Date.now() + e.remain; e.id = setTimeout(e.fn, e.remain); e.remain = null; } });
+  document.body.classList.remove("tourpaused");
+  if(document.fullscreenEnabled && !document.fullscreenElement && document.documentElement.requestFullscreen){
+    try{ document.documentElement.requestFullscreen({navigationUI:"hide"}).catch(()=>{}); }catch(e){}
+  }
+  mediaState("playing");
+}
+function togglePause(){ tourPaused ? resumeTour() : pauseTour(); }
+ppBtn.addEventListener("click", togglePause);
+
+/* ---------- hardware media keys ---------- */
+const hasMS = "mediaSession" in navigator;
+function mediaState(s){ if(!hasMS) return; try{ navigator.mediaSession.playbackState = s; }catch(e){} }
+function mediaMeta(cap){
+  if(!hasMS) return;
+  try{
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: cap ? cap.replace(/\*\*/g,"").replace(/`/g,"") : "RushCut walkthrough",
+      artist: "RushCut — narrated walkthrough"
+    });
+  }catch(e){}
+}
+function mediaKeysOn(){
+  if(!hasMS) return;
+  const acts = [["play", resumeTour], ["pause", pauseTour],
+    ["previoustrack", ()=>{ if(tourOn) jumpTo(Math.max(tourIdx - 1, 0)); }],
+    ["nexttrack",     ()=>{ if(tourOn) jumpTo(Math.min(tourIdx + 1, TOUR.length)); }]];
+  for(const a of acts){ try{ navigator.mediaSession.setActionHandler(a[0], a[1]); }catch(e){} }
+  mediaState("playing");
+}
+function mediaKeysOff(){
+  if(!hasMS) return;
+  for(const a of ["play","pause","previoustrack","nexttrack"]){
+    try{ navigator.mediaSession.setActionHandler(a, null); }catch(e){}
+  }
+  try{ navigator.mediaSession.metadata = null; }catch(e){}
+  mediaState("none");
+}
+
+function stopTour(){
+  tourOn = false;
+  if(document.fullscreenElement && document.exitFullscreen){ document.exitFullscreen().catch(()=>{}); }
+  if(tourAudio){ tourAudio.pause(); tourAudio = null; }
+  if(tourResolve) tourResolve(); tourResolve = null;
+  mediaKeysOff(); clearFallback(); visVWasPlaying = false;
+  tourbar.classList.remove("show"); markSeg(-1); tourPaused = false; ppBtn.textContent = "❚❚";
+  tourTimers.forEach(e=>clearTimeout(e.id)); tourTimers = [];
+  caption(null); sceneVis(null); stepClear();
+  document.body.classList.remove("tourpaused");
+  document.body.classList.remove("touring");
+  tourbtn.textContent = "▶ Narrated walkthrough";
+}
+tourbtn.addEventListener("click", tour);
+document.getElementById("heroplaybtn").addEventListener("click", ()=>{ if(!tourOn) tour(0); });
+document.getElementById("replay").addEventListener("click", ()=>{ if(tourOn) stopTour(); tour(0); });
+</script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+So this is RushCut, a professional video editor where an AI agent works beside the editor, not behind a menu. And everything, the brain, the video generation, the footage itself, runs on one NVIDIA G B ten box. Nothing leaves the building. And we can prove it.
