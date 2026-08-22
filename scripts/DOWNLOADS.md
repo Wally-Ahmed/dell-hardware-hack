@@ -8,6 +8,44 @@ If anyone has a fast connection elsewhere: pull Tier 1 there, sneakernet on a dr
 Speed tip: `pip install hf_transfer && export HF_HUB_ENABLE_HF_TRANSFER=1`, then
 `huggingface-cli download <repo> --include "<pattern>" --local-dir <dest>`.
 
+## Tier 0 — SOFTWARE (only if there is no pre-loaded USB drive)
+
+The tiers below are models only. With no USB, the software has to come down while the
+network is up too — models are useless without it. In this order:
+
+```bash
+export NVME_ROOT=/path/to/nvme/root   # same value you will pass to setup_box.sh
+sudo apt-get install -y ffmpeg git python3.12-venv
+curl -fsSL https://ollama.com/install.sh | sh          # ollama itself
+pip install -U "huggingface_hub[cli]" hf_transfer      # huggingface-cli itself
+
+# ComfyUI + the six custom node packs (NO ComfyUI-Manager — it phones home)
+git clone https://github.com/comfyanonymous/ComfyUI "$NVME_ROOT/ComfyUI"
+cd "$NVME_ROOT/ComfyUI/custom_nodes"
+git clone https://github.com/kijai/ComfyUI-WanVideoWrapper
+git clone https://github.com/kijai/ComfyUI-KJNodes
+git clone https://github.com/Kosinkadink/ComfyUI-VideoHelperSuite
+git clone https://github.com/kijai/ComfyUI-segment-anything-2
+git clone https://github.com/numz/ComfyUI-SeedVR2_VideoUpscaler   # search GitHub if 404
+git clone https://github.com/Fannovel16/ComfyUI-Frame-Interpolation
+
+# Python env. Torch on GB10 (aarch64 + sm_121) is the fragile step: try the cu130 index,
+# and if it fails or CUDA is not visible afterwards, follow NVIDIA's DGX Spark ComfyUI
+# playbook instead of fighting it (search: "dgx-spark-playbooks comfyui").
+python3 -m venv "$NVME_ROOT/venv" && source "$NVME_ROOT/venv/bin/activate"
+pip install torch torchvision --index-url https://download.pytorch.org/whl/cu130
+python -c "import torch; print(torch.cuda.is_available())"   # must print True
+pip install -r "$NVME_ROOT/ComfyUI/requirements.txt"
+pip install fastapi "uvicorn[standard]" httpx pydantic numpy motor
+
+# Editor toolchain (the demo UI runs on the box)
+curl -fsSL https://bun.sh/install | bash
+cd <repo>/frontend/apps/web && bun install
+```
+
+`setup_box.sh` tolerates a pre-existing venv and an already-cloned ComfyUI — running it
+after Tier 0 is the intended path.
+
 ## Tier 1 — MUST (core live loop, ~45–50 GB total)
 
 ```bash
