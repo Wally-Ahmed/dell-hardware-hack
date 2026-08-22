@@ -144,3 +144,174 @@ workflows/ *.json ComfyUI API-format templates
 frontend/  OpenCut fork or minimal React editor
 scripts/   setup_box.sh, smoke_test.py, bakery.py
 ```
+
+---
+
+# Workflow (applies to every session and every subagent)
+
+## Session Handoff (read first)
+
+`HANDOFF.md` at the project root is the cross-session / cross-compact handoff. Read it once at
+session start — it is kept current enough that a single read restores full working context after
+a crash, compact, or new session. After every meaningful step (task finished, decision made,
+in-flight work changed), update it in place: overwrite stale sections, never append a log. It is
+git-tracked. This whole pattern applies for all subagents doing multi-step work too.
+
+## Token Usage Rules
+
+Keep context small. Do not read the whole repo unless necessary. This whole pattern applies for
+all subagents too.
+
+Before broad file search or opening many files:
+
+1. Check Graphify outputs first.
+2. Use MemPalace only when prior project decisions or past context may matter.
+3. Open only the files needed for the current task.
+4. Prefer targeted reads over large scans.
+5. Summarize findings before continuing to more files.
+
+## Graphify Usage
+
+Use Graphify as the first-pass repo map. This whole pattern applies for all subagents too.
+
+> **Status (2026-08-22): the graph is built** — `graphify-out/graph.json` exists (81 nodes,
+> 142 edges, 6 **labeled** communities, extracted from the planning brief in this file).
+> Extraction of `docs/PLAN.md`, `docs/ROLES.md`, `docs/api.md`, `README.md`, and
+> `backend/models/registry.json` is in flight and will roughly double it. It becomes a code
+> map as source lands. **No post-commit hook and no PreToolUse hooks are configured in this
+> repo** — rebuild manually with `graphify update .` after significant changes.
+
+Before architecture work, refactors, dependency tracing, or "where is this implemented?" tasks:
+
+- Orient once per unfamiliar area: read only `## God Nodes` and `## Suggested Questions` from
+  `graphify-out/GRAPH_REPORT.md`. Both carry real node labels, which is the vocabulary queries
+  need. The communities here ARE labeled (e.g. "Model Manager and Box Setup", "Agent, Consent
+  Registry and Editor UI"), so `## Communities` is also usable for navigation.
+- Then `graphify query "<question>"` using vocabulary from that orientation, not from the user's
+  phrasing. `graphify path "<A>" "<B>"` and `graphify explain "<concept>"` take exact labels.
+- Sanity-check every query: if the `Start:` node list is unrelated to your question, the query
+  missed — re-query with different labels rather than trusting the subgraph or falling back
+  to grep.
+- Read the full report only for broad architecture review.
+- Fall back to broad search only when the graph is missing or stale.
+
+**Why this order:** `graphify query` is fuzzy label-matching, so it fails *silently* when your
+phrasing doesn't match node labels — it returns a confidently-wrong subgraph with no error. The
+orientation sections are what make queries hit; the full report is a summary, not a dump, so
+reading it is cheap — it is just untargeted.
+
+## MemPalace Usage
+
+Use MemPalace for long-term project memory. This whole pattern applies for all subagents too.
+
+Use it when:
+
+- the user says we discussed something before
+- prior architecture decisions matter
+- the current task depends on earlier reasoning
+- you need to recall previous plans, conventions, or implementation choices
+
+Do not use MemPalace for every task. Do not treat recalled memory as automatically true. Verify
+against the current repo when needed.
+
+This project's palace: wing `dell_hardware_hack`, stored at `.mempalace/palace` (project-local —
+the global `MEMPALACE_PALACE_PATH` is a *relative* path, so always run `mempalace` commands from
+the project root). Search with `mempalace search "<question>"` (CLI) or the `mempalace_search`
+MCP tool. Refile after doc changes with `mempalace mine .`.
+
+### Revive MemPalace after every compact
+
+The MemPalace MCP server (stdio) drops silently across long sessions and every `/compact`
+boundary — its `mcp__plugin_mempalace_mempalace__*` tools then show as disconnected (no error,
+no data loss). **After every `/compact`, before relying on MemPalace, verify its tools are
+connected; if they are not, prompt the user to run `/plugin` (or `/mcp`) to revive it** (the
+agent cannot invoke those slash-commands itself). Until it is reconnected, fall back to the file
+memory + Graphify.
+
+## File Memory
+
+The third memory layer, independent of MemPalace and always loaded — the per-project memory
+directory. The key is derived from the project path, so it differs by machine:
+
+- host Mac: `~/.claude/projects/-Users-wally-Documents-GitHub-dell-hardware-hack/memory/`
+- any Codespace: `~/.claude/projects/-workspaces-dell-hardware-hack/memory/`
+
+`MEMORY.md` there is the index loaded into every session. Write a memory when a fact is durable
+and not derivable from the code or git history — project goals, constraints, decisions with a
+rationale, or user preferences about how work should be done. One fact per file, indexed in
+`MEMORY.md`. Do not record what the repo already says. Renaming the project directory orphans
+this store until retagged.
+
+## Working Style
+
+For implementation tasks (this whole pattern applies for all subagents too):
+
+1. Identify the smallest relevant file set.
+2. Explain the intended change briefly.
+3. Make focused edits.
+4. Run or suggest the narrowest useful test.
+5. Avoid unnecessary rewrites.
+
+For design tasks: use Graphify for repo structure, MemPalace for past decisions only if
+relevant, and keep the answer concise and action-oriented.
+
+## Orchestrator Mode
+
+For EVERY assignment: act as the orchestrator, not the implementer. **Parallelism is the point —
+today is a one-day build, and wall-clock time is the scarcest resource.**
+
+1. Break the assignment down into individual parts.
+2. Hand each part off to subagents — **background and parallel wherever parts are independent**;
+   give each a self-contained prompt with exact specs and a required report format.
+3. Keep only the glue: integrate the subagents' outputs, resolve conflicts between them, and do
+   the final wiring.
+4. Verify everything works end-to-end yourself before reporting done — run the checks, curl the
+   endpoints, read the diffs; never relay a subagent's "done" unverified.
+
+Do a part yourself only when it is trivially small (a small or one-line edit, single command),
+when it IS the glue/verification, or when the user explicitly says to do it yourself.
+
+## Conductor Rule
+
+The main loop is the CONDUCTOR. It is imperative that its context window stays SMALL.
+
+1. Edit files yourself ONLY for small / one-line changes.
+2. Anything that requires complex reasoning — design work, multi-file edits, debugging, asset
+   builds, deep analysis — is handed off to a subagent with a self-contained spec.
+3. The conductor keeps only: spec-writing, dispatch, integration/glue, conflict resolution, and
+   end-to-end verification of subagent output.
+4. Protect the context window: consume subagent REPORTS instead of raw files; never pull large
+   files, transcripts, or logs into the conductor's context when a subagent can read them and
+   return a summary.
+
+**Branch discipline for subagents:** a subagent writes only inside the directories its role owns
+(see `docs/ROLES.md`). Two subagents must never be given overlapping write territories. The
+conductor commits; subagents do not run `git commit` or `git push` unless the spec says so.
+
+## Derived Artifacts
+
+`graphify-out/`, `.mempalace/`, `mempalace.yaml`, and `entities.json` are gitignored and
+machine-local. They are rebuilt, never hand-edited:
+
+- `graphify update .` rebuilds the graph (manual — no hook in this repo).
+- `mempalace mine .` refiles project files into the palace.
+
+## Project Rule
+
+Optimize for low-token, high-signal work. Prefer precise context retrieval over loading large
+files or repeating architecture summaries.
+
+## graphify
+
+This project has a knowledge graph at graphify-out/ with god nodes, community structure, and
+cross-file relationships.
+
+Rules:
+- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json
+  exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"`
+  for focused concepts. These return a scoped subgraph, usually much smaller than
+  GRAPH_REPORT.md or raw grep output.
+- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when
+  query/path/explain do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API
+  cost).
