@@ -277,6 +277,12 @@ from backend.agent.router import router as agent_router  # noqa: E402
 
 app.include_router(agent_router)
 
+# Render path: timeline JSON -> ffmpeg on the backend (the vendored editor's
+# own export stays unused by design).
+from backend.render.router import router as render_router  # noqa: E402
+
+app.include_router(render_router)
+
 
 # ---------------------------------------------------------------- websocket
 
