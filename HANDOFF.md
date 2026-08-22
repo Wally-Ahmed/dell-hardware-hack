@@ -26,17 +26,25 @@ contract, `docs/PLAN.md` for the full architecture essay.
 
 ## In flight
 
-- **Role B (backend) — the current focus.** `backend/core/config.py` and `backend/core/ws.py`
-  exist (uncommitted, on `backend` branch). A subagent is building the rest: job queue +
-  state machine, pluggable executor (`RUSHCUT_EXECUTOR=simulated|comfy`), ComfyUI client,
-  model manager, `backend/app.py`, tests. Design intent: ONE app that runs simulated in the
-  Codespace and real on the GB10 — the mock then becomes contract-reference only.
-- **Graphify extraction of the new docs** (PLAN/ROLES/api/README/registry) — subagent was
-  resumed by the user after an API drop; result pending. Will roughly double the graph.
-- **Codespace tooling install** (claude CLI, Fable-max settings, claude-mem, MemPalace,
-  graphify, auto-memory) — installer staged in host scratchpad `cs_tooling.sh`; run it over
-  `gh codespace ssh` next. One manual step after: the user runs `claude` in the Codespace once
-  (interactive auth).
+- **Role B (backend).** `backend/core/config.py` + `backend/core/ws.py` exist (uncommitted,
+  `backend` branch). A subagent is building the rest: job queue + state machine, pluggable
+  executor (`RUSHCUT_EXECUTOR=simulated|comfy`), ComfyUI client, model manager,
+  `backend/app.py`, tests. Design intent: ONE app that runs simulated in the Codespace and
+  real on the GB10 — the mock then becomes contract-reference only.
+- **Role C (editor bake-off).** A subagent is cloning OpenCut (pre-rewrite commit) and
+  OpenChatCut into the Codespace at `/tmp/bakeoff/`, attempting installs/boots, and will
+  report a verdict with evidence. Vendoring the winner into `frontend/` is the follow-up.
+
+## Done since previous update
+
+- **Codespace tooling installed** in `nle-main-v6gxg5rp9wprcxpx9`: claude CLI 2.1.197 with
+  Fable-max settings, MemPalace CLI 3.7.1 with a project-local palace (**180 drawers**, rooms
+  backend/documentation/general — always pass `--palace .mempalace/palace` in raw SSH shells;
+  the env var only applies inside Claude Code), graphify CLI, auto-memory with 2 seed entries.
+  **Pending manual step: the user must run `claude` once in the Codespace (interactive auth).**
+- **Knowledge graph rebuilt across all docs**: 261 nodes, 434 edges, **12 labeled
+  communities** (was 81/142/6 covering CLAUDE.md only). New-doc extraction links into the
+  original `claude_*` nodes; rejected alternatives carry their rejection rationale.
 
 ## Not started
 

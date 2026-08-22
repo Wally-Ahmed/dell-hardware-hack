@@ -30,6 +30,26 @@ the render path.
 **Role A works on the GB10 directly**, not in a Codespace — their job *is* the box.
 Everyone else works in their own Codespace (per-user, so four dev servers, no port collisions).
 
+## Assignments
+
+**Claude (the conductor session + its subagents) owns the core: Roles B and E, plus
+integration** — backend, job queue, model manager, agent loop, NemoClaw, keeping `main`
+healthy, and end-to-end verification at the merge windows. The backend and the editor
+bake-off are already in flight.
+
+**Humans take the roles that need hands, eyes, or taste:**
+
+| Role | Who | Why a human |
+|---|---|---|
+| **A — Box & Models** | *(claim me — first person with physical access to the GB10)* | USB drive, NVMe copy, monitor/dummy plug, watching real generations. Cannot be done remotely. |
+| **C — Editor UI** | *(claim me — strongest React/TS person)* | Panel layout, timeline feel, and demo polish are taste calls. Builds on the bake-off winner. |
+| **D — Ingest & Cast** | *(claim me — Python/CV person)* | Judging cluster quality and picking good reference crops needs eyes on real footage. |
+
+Claim a role by putting your name in this table (that edit is allowed on `main` — it is the
+one exception to the contract freeze). No GitHub collaborator access yet? Fork, work on your
+fork's copy of your branch, open a PR — you'll be added as a collaborator once usernames exist.
+Claude fills whichever human roles stay unclaimed, in cut-line order.
+
 ## Merge protocol
 
 Merges to `main` happen **on a clock: 14:30, 15:30, 16:30.** Not when you feel ready.
