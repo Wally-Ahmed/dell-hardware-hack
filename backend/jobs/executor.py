@@ -11,6 +11,7 @@ import json
 import os
 import random
 from collections.abc import Awaitable, Callable
+import typing
 from typing import Any, Protocol
 
 import httpx
@@ -204,21 +205,53 @@ class ComfyExecutor:
     between polls and POST {base}/interrupt so the GPU stops burning too.
     """
 
+    # Job type -> workflow template. One executor serves every job type, so
+    # the template must be resolved per job, not fixed at construction — the
+    # ctor default only covers unlisted types. File names match
+    # workflows/README.md; a missing file fails the job with a pointer there.
+    TEMPLATE_BY_TYPE: typing.ClassVar[dict[str, str]] = {
+        "generate_shot": "wan5b_i2v",
+        "generate_keyframe": "klein_keyframe_multiref",
+        "remove_person": "vace_inpaint_person",
+        "enforce_cast_policy": "vace_inpaint_person",
+        "replace_person": "animate_replace",
+        "reangle_shot": "fun_camera_reangle",
+        "upscale": "seedvr2_upscale",
+        "interpolate": "rife_interp",
+    }
+
     def __init__(self, base_url: str | None = None, template: str = "wan5b_i2v") -> None:
         self._base = (base_url or settings.comfy_url).rstrip("/")
         self._template = template
 
-    def _registry_model(self) -> dict[str, Any] | None:
+    def _template_for(self, job: dict[str, Any]) -> str:
+        return self.TEMPLATE_BY_TYPE.get(job["type"], self._template)
+
+    def _registry_model(self, template: str) -> dict[str, Any] | None:
         # Provenance should name the model, not the workflow file; the
         # registry is the single source of that mapping.
         data = json.loads(settings.registry_path.read_text())
         for model in data["models"]:
-            if model.get("workflowTemplate") == self._template:
+            if model.get("workflowTemplate") == template:
                 return model
         return None
 
     async def run(self, job: dict[str, Any], emit: Emit) -> dict[str, Any]:
+        self._template = self._template_for(job)
         template_path = settings.workflows_dir / f"{self._template}.json"
+        if not template_path.exists():
+            job.update(
+                state="failed",
+                finishedAt=now_iso(),
+                message=f"no workflow template for '{job['type']}'",
+                error={
+                    "code": "template_missing",
+                    "message": f"{template_path.name} not found in workflows/ — "
+                    "build and save it per workflows/README.md, then retry",
+                },
+            )
+            await emit(job)
+            return job
         template = json.loads(template_path.read_text())
         # Seed before patching so the workflow and the provenance agree.
         params = dict(job["params"])
@@ -300,7 +333,7 @@ class ComfyExecutor:
     def _asset(
         self, job: dict[str, Any], params: dict[str, Any], filename: str, kind: str
     ) -> dict[str, Any]:
-        model = self._registry_model()
+        model = self._registry_model(self._template)
         return {
             "assetId": oid("ast"),
             "projectId": job["projectId"],
