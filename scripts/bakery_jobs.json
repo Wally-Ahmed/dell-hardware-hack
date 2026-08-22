@@ -1,0 +1,37 @@
+{
+  "$comment": "Hero bakery queue — EDIT THE PROMPTS/SEEDS with team chat to match the real demo shots before running. Each job runs workflows/<template>.json with the prompt/seed patched into the RUSHCUT_PROMPT / RUSHCUT_SEED titled nodes. 'references' is a human note about what the template's RUSHCUT_IMAGE (or mask) input must point at — set that up in the ComfyUI GUI when saving the template. est_minutes defaults to 6 if omitted.",
+  "jobs": [
+    {
+      "id": "hero_dana_lobby_lowangle",
+      "template": "wan14b_i2v_lightning",
+      "prompt": "Low-angle tracking shot of Dana walking through a sunlit corporate lobby, glass and steel architecture, confident stride, cinematic corporate brand film, shallow depth of field",
+      "seed": 101,
+      "est_minutes": 6,
+      "references": "RUSHCUT_IMAGE = approved klein keyframe (e.g. dana_lobby_keyframe.png) copied into ComfyUI/input/ before saving the template"
+    },
+    {
+      "id": "hero_dana_desk_pushin",
+      "template": "wan14b_i2v_lightning",
+      "prompt": "Slow push-in on Dana at a standing desk reviewing a tablet, warm evening office light through blinds, corporate documentary look, crisp detail",
+      "seed": 202,
+      "est_minutes": 6,
+      "references": "RUSHCUT_IMAGE = dana_desk_keyframe.png in ComfyUI/input/"
+    },
+    {
+      "id": "hero_lobby_bystander_removal",
+      "template": "vace_inpaint_person",
+      "prompt": "empty modern office lobby, clean background, consistent lighting, no people",
+      "seed": 303,
+      "est_minutes": 4,
+      "references": "input clip + person mask from the SAM2 track of the unapproved person (Role D provides the mask) — template saved with both loaded"
+    },
+    {
+      "id": "hero_upscale_dana_lobby",
+      "template": "seedvr2_upscale",
+      "prompt": "",
+      "seed": 404,
+      "est_minutes": 60,
+      "references": "RUN LAST — 50-90 min on this box. Input video = the hero_dana_lobby_lowangle output, copied into ComfyUI/input/ and selected in the template. No prompt node; only the seed patches."
+    }
+  ]
+}
