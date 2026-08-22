@@ -1,0 +1,23 @@
+{
+  "$comment": "Tiny API-format ComfyUI workflow for exercising the RUSHCUT node-title patching convention. Not a runnable graph.",
+  "1": {
+    "class_type": "CLIPTextEncode",
+    "inputs": { "text": "placeholder prompt", "clip": ["5", 0] },
+    "_meta": { "title": "RUSHCUT_PROMPT" }
+  },
+  "2": {
+    "class_type": "KSampler",
+    "inputs": { "seed": 0, "steps": 4, "cfg": 1.0 },
+    "_meta": { "title": "RUSHCUT_SEED" }
+  },
+  "3": {
+    "class_type": "LoadImage",
+    "inputs": { "image": "placeholder.png" },
+    "_meta": { "title": "RUSHCUT_IMAGE" }
+  },
+  "4": {
+    "class_type": "SaveVideo",
+    "inputs": { "filename_prefix": "rushcut", "fps": 24 },
+    "_meta": { "title": "Save Video" }
+  }
+}
