@@ -45,6 +45,14 @@ class JobQueue:
         await self._pending.put(job["jobId"])
         return job
 
+    async def admit(self, job: dict[str, Any]) -> dict[str, Any]:
+        """Register and broadcast a job that will never run — e.g. one born
+        policy_blocked by the pre-GPU cast gate. Visible via get/list like any
+        other job, but never enqueued."""
+        self._jobs[job["jobId"]] = job
+        await self._emit(job)
+        return job
+
     async def cancel(self, job_id: str) -> dict[str, Any] | None:
         """Best-effort. The state flip *is* the cancel flag: SimulatedExecutor
         checks it between ticks and stops mutating; ComfyExecutor checks it

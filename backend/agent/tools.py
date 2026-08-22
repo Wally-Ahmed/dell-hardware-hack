@@ -114,9 +114,12 @@ class ToolBelt:
         bin as a candidate."""
         args = dict(arguments)
         project_id = args.pop("projectId", None)
-        return await self._post(
-            "/jobs", {"type": job_type, "projectId": project_id, "params": args}
-        )
+        body: Json = {"type": job_type, "params": args}
+        # Omit rather than send null — the endpoint's projectId default only
+        # applies when the key is absent, and the LLM often leaves it unset.
+        if project_id:
+            body["projectId"] = project_id
+        return await self._post("/jobs", body)
 
 
 # ---------------------------------------------------------------------------

@@ -15,15 +15,16 @@ from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from typing import Any
 
-from fastapi import APIRouter, FastAPI, Request, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from backend.core.config import settings
 from backend.core.ws import hub
+from backend.db.store import get_store
 from backend.jobs.executor import get_executor
 from backend.jobs.queue import JobQueue
-from backend.jobs.state import oid
+from backend.jobs.state import new_job, oid
 from backend.models.manager import ModelManager
 
 PROJECT_ID = "proj_01J8W_atlas"
@@ -68,8 +69,55 @@ class JobRequest(BaseModel):
     params: dict[str, Any] = {}
 
 
+async def _pre_gpu_cast_gate(req: JobRequest) -> dict[str, Any] | None:
+    """Consent check BEFORE the GPU ever runs. The post-generation check on
+    output stays authoritative; this one refuses to spend a 3-6 minute render
+    on a request that already references an unapproved or unknown person.
+    Only person refs (per_*) are gated — asset refs are not people."""
+    person_refs = [r for r in (req.params.get("references") or []) if str(r).startswith("per_")]
+    if not person_refs:
+        return None
+    store = await get_store()
+    # list() seeds the demo people on a fresh store; get() alone would see an
+    # empty registry on the first request of the process and block everyone.
+    await store.people.list(req.projectId)
+    unapproved: list[dict[str, Any]] = []
+    unresolved: list[dict[str, Any]] = []
+    for ref in person_refs:
+        person = await store.people.get(ref)
+        if person is None:
+            # Missing from the registry is unresolved, and unresolved never
+            # auto-passes — same rule as the output check.
+            unresolved.append({"trackId": ref, "reason": "not in cast registry", "cropUrl": None})
+        elif person.get("policy") != "approved":
+            unapproved.append(
+                {"trackId": ref, "personId": ref, "confidence": 1.0, "frames": [], "cropUrl": None}
+            )
+    if not unapproved and not unresolved:
+        return None
+    job = new_job(req.type, req.projectId, req.params)
+    job.update(
+        state="policy_blocked",
+        stage="policy_check",
+        finishedAt=job["createdAt"],
+        message="blocked before generation: request references non-approved people",
+        policy={
+            "verdict": "blocked",
+            "unapproved": unapproved,
+            "unresolved": unresolved,
+            "remediation": None,
+            "remediatedAssetId": None,
+        },
+    )
+    return job
+
+
 @app.post("/jobs")
 async def create_job(req: JobRequest, request: Request) -> dict[str, Any]:
+    blocked = await _pre_gpu_cast_gate(req)
+    if blocked is not None:
+        await request.app.state.queue.admit(blocked)
+        return blocked
     return await request.app.state.queue.submit(req.type, req.projectId, req.params)
 
 
@@ -187,95 +235,23 @@ async def session_review(sid: str, request: Request, apply: bool = True) -> dict
 
 
 # ---------------------------------------------------------------- people
-# Role D territory — thin stub until backend/ingest lands, same canned people
-# as the mock, so the editor's cast panel keeps working today.
+# Role D's repo-backed cast endpoints (Mongo with in-memory fallback). The
+# canned stub this replaced lives in backend/mock/app.py for contract reference.
+from backend.ingest.router import router as ingest_router
 
-people_stub = APIRouter()
-
-PEOPLE: list[dict[str, Any]] = [
-    {
-        "_id": "per_dana",
-        "projectId": PROJECT_ID,
-        "name": "Dana",
-        "role": "principal",
-        "policy": "approved",
-        "refs": {
-            "face": "/media/refs/dana_face.jpg",
-            "body": "/media/refs/dana_body.jpg",
-            "wardrobe": "/media/refs/dana_wardrobe.jpg",
-        },
-        "consent": {
-            "recordUrl": "/media/consent/dana_signed.pdf",
-            "scope": "Project Atlas — corporate brand film, all media, 2 years",
-            "noticeAt": "2026-08-20T09:00:00Z",
-            "signedAt": "2026-08-22T08:15:00Z",
-            "revokedAt": None,
-        },
-    },
-    {
-        "_id": "per_marcus",
-        "projectId": PROJECT_ID,
-        "name": "Marcus",
-        "role": "principal",
-        "policy": "approved",
-        "refs": {
-            "face": "/media/refs/marcus_face.jpg",
-            "body": "/media/refs/marcus_body.jpg",
-            "wardrobe": "/media/refs/marcus_wardrobe.jpg",
-        },
-        "consent": {
-            "recordUrl": "/media/consent/marcus_signed.pdf",
-            "scope": "Project Atlas — corporate brand film, all media, 2 years",
-            "noticeAt": "2026-08-20T09:00:00Z",
-            "signedAt": "2026-08-22T08:20:00Z",
-            "revokedAt": None,
-        },
-    },
-    {
-        # The demo beat: an unknown face the human must approve or remove.
-        "_id": "per_unknown_1",
-        "projectId": PROJECT_ID,
-        "name": None,
-        "role": "background",
-        "policy": "unknown",
-        "refs": {
-            "face": "/media/refs/unknown_1_face.jpg",
-            "body": "/media/refs/unknown_1_body.jpg",
-            "wardrobe": None,
-        },
-        "consent": None,
-    },
-]
-
-
-class PolicyUpdate(BaseModel):
-    policy: str  # approved | unknown | remove
-    name: str | None = None
-
-
-@people_stub.get("/people")
-async def list_people(projectId: str = PROJECT_ID) -> list[dict[str, Any]]:
-    return [p for p in PEOPLE if p["projectId"] == projectId]
-
-
-@people_stub.post("/people/{person_id}/policy")
-async def set_policy(person_id: str, body: PolicyUpdate) -> dict[str, Any]:
-    for p in PEOPLE:
-        if p["_id"] == person_id:
-            p["policy"] = body.policy
-            if body.name:
-                p["name"] = body.name
-            return p
-    return _not_found(person_id)
-
-
-app.include_router(people_stub)
+app.include_router(ingest_router)
 
 # Role E's chat surface. The loop only ever reaches the timeline through the
 # same HTTP contract as the UI — no private back door.
-from backend.agent.router import router as agent_router  # noqa: E402
+from backend.agent.router import router as agent_router
 
 app.include_router(agent_router)
+
+# Render path: timeline JSON -> ffmpeg on the backend (the vendored editor's
+# own export stays unused by design).
+from backend.render.router import router as render_router
+
+app.include_router(render_router)
 
 
 # ---------------------------------------------------------------- websocket

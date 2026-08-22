@@ -34,7 +34,7 @@ class Hub:
         for ws in sockets:
             try:
                 await ws.send_json(frame)
-            except Exception:
+            except Exception:  # noqa: BLE001 — any send failure means prune
                 dead.append(ws)
         for ws in dead:
             await self.remove(ws)

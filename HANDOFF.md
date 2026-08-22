@@ -24,15 +24,44 @@ contract, `docs/PLAN.md` for the full architecture essay.
 - Memory tooling on the host Mac: MemPalace (wing `dell_hardware_hack`), graphify graph of the
   brief (81 nodes / 6 labeled communities), auto-memory entries incl. GB10 gotchas.
 
-## In flight
+## In flight (one builder left)
 
-- **Role A enablement.** A subagent is finishing `scripts/` (BOX_RUNBOOK.md, setup_box.sh,
-  smoke_test.py exist; bakery.py pending). `docs/ONBOARD_ROLE_A.md` is the handoff packet
-  for the box teammate AND their laptop agent — visual checklist, requirements, gotchas,
-  and hard rules for the assisting agent.
-- **Waiting on humans:** teammates claim roles in `docs/ROLES.md`; the user authenticates
-  `claude` in the Codespace once; GitHub usernames → collaborator access (until then,
-  fork + PR).
+- **Role C** — panels (AI chat / Cast / Models), generative timeline element, WS client in
+  the vendored OpenCut; building in the Codespace on `editor`. When it lands: conductor
+  drives the full loop through the UI (the goal's non-negotiable evidence), then merges.
+
+## Merged and live-verified since (main `1b2f561`)
+
+- **Render** (`6b3e897`) — timeline JSON → ffmpeg trim/concat with black-gap segments,
+  mounted at `/render`. 12/12 tests with REAL encodes; live drive: 2 clips + 500 ms gap →
+  exactly 2500 ms by ffprobe.
+- **Ingest & cast (Role D)** (`06a7a33` + `1b2f561`) — repo-backed `/people` replaced the
+  stub (Mongo w/ in-memory fallback), cosine clustering (unresolved NEVER dropped),
+  pluggable analyzers (`RUSHCUT_ANALYZERS=real|fake`). 14/14 tests; live: policy persists,
+  ingest e2e `{shots:4, tracks:6, matched:2, new:1}` = the demo beat; chat `list_cast`
+  re-verified against it. **51/51 full backend suite.**
+- All of `main`/`backend`/`ingest`/`box` sit at `1b2f561`; only `editor` diverges (Role C).
+
+## Core loop status (goal: demo-ready 17:30)
+
+**Backend half PROVEN live** (commit `1e37623`): dev brain (scripted OpenAI-compatible
+stand-in, `backend/agent/dev_brain.py`, port 11434) + real backend + real AgentLoop —
+turn 1 held a pendingPlan with ZERO jobs created; approval executed `generate_shot`; job
+walked to `complete` with clear verdict + full provenance. `forcePolicyHit` lands
+`policy_blocked` (unapproved 0.81 + unresolved no-face + inpaint remediation). The GB10
+swaps the brain via `RUSHCUT_OLLAMA_URL` — dev brain never runs there. UI half lands with
+Role C, then the loop gets driven through the editor.
+
+**Role A is fully enabled:** `docs/ONBOARD_ROLE_A.md` (handoff packet incl. agent hard
+rules), `scripts/` (runbook, setup, smoke test, bakery — all verified), `workflows/README.md`
+(template names + RUSHCUT node convention), `docs/DEMO_SCRIPT.md` (four beats + fallbacks).
+
+**Team-chat ask for Role A (post when they exist):** run the runbook; paste smoke-test
+output; the moment it's green say so — the conductor flips `RUSHCUT_EXECUTOR=comfy`,
+re-verifies the loop, and starts the bakery if you haven't.
+
+- **Waiting on humans:** role claims in `docs/ROLES.md`; `claude` auth in the Codespace;
+  GitHub usernames → collaborator access (until then, fork + PR).
 
 ## Merged to main and verified (window 1+)
 
