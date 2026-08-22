@@ -10,8 +10,8 @@ import copy
 import json
 import os
 import random
-from collections.abc import Awaitable, Callable
 import typing
+from collections.abc import Awaitable, Callable
 from typing import Any, Protocol
 
 import httpx
