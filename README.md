@@ -1,4 +1,4 @@
-# An AI-Native Editor for Professional Filmmakers
+# VisualStudio — an AI-Native Editor for Professional Filmmakers
 
 A professional video editor where an AI agent works *beside* the editor rather than behind a
 menu — recreating shots from angles nobody covered on the day, altering what happened inside a
