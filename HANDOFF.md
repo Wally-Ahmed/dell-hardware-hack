@@ -24,15 +24,23 @@ contract, `docs/PLAN.md` for the full architecture essay.
 - Memory tooling on the host Mac: MemPalace (wing `dell_hardware_hack`), graphify graph of the
   brief (81 nodes / 6 labeled communities), auto-memory entries incl. GB10 gotchas.
 
-## In flight (three parallel builders)
+## In flight (one builder left)
 
 - **Role C** — panels (AI chat / Cast / Models), generative timeline element, WS client in
-  the vendored OpenCut; building in the Codespace on `editor`; verified dev-boot required.
-- **Role D** — `backend/db` (motor + in-memory fallback), `backend/ingest` (cosine
-  clustering, ref selection, pluggable analyzers with fakes, real /people + /ingest
-  routers); commits land on `ingest`.
-- **Render** — `backend/render` (timeline JSON → ffmpeg trim/concat, router, graceful-skip
-  tests).
+  the vendored OpenCut; building in the Codespace on `editor`. When it lands: conductor
+  drives the full loop through the UI (the goal's non-negotiable evidence), then merges.
+
+## Merged and live-verified since (main `1b2f561`)
+
+- **Render** (`6b3e897`) — timeline JSON → ffmpeg trim/concat with black-gap segments,
+  mounted at `/render`. 12/12 tests with REAL encodes; live drive: 2 clips + 500 ms gap →
+  exactly 2500 ms by ffprobe.
+- **Ingest & cast (Role D)** (`06a7a33` + `1b2f561`) — repo-backed `/people` replaced the
+  stub (Mongo w/ in-memory fallback), cosine clustering (unresolved NEVER dropped),
+  pluggable analyzers (`RUSHCUT_ANALYZERS=real|fake`). 14/14 tests; live: policy persists,
+  ingest e2e `{shots:4, tracks:6, matched:2, new:1}` = the demo beat; chat `list_cast`
+  re-verified against it. **51/51 full backend suite.**
+- All of `main`/`backend`/`ingest`/`box` sit at `1b2f561`; only `editor` diverges (Role C).
 
 ## Core loop status (goal: demo-ready 17:30)
 
