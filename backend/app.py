@@ -271,6 +271,12 @@ async def set_policy(person_id: str, body: PolicyUpdate) -> dict[str, Any]:
 
 app.include_router(people_stub)
 
+# Role E's chat surface. The loop only ever reaches the timeline through the
+# same HTTP contract as the UI — no private back door.
+from backend.agent.router import router as agent_router  # noqa: E402
+
+app.include_router(agent_router)
+
 
 # ---------------------------------------------------------------- websocket
 

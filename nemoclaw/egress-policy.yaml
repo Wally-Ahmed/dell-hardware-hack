@@ -1,0 +1,45 @@
+# NemoClaw egress policy — RushCut agent sandbox (GB10)
+#
+# This file IS the air-gap demo: the agent process runs inside OpenShell
+# with this policy loaded, and the only network it can reach is the two
+# loopback services it needs. Judges watching the network see nothing leave
+# the box — not because we promise, but because the sandbox refuses.
+#
+# Rule order: first match wins; anything unmatched hits the default at the
+# bottom, which denies.
+
+version: 1
+
+rules:
+  # The RushCut backend (FastAPI). Every tool in backend/agent/tools.py goes
+  # through this one origin — jobs, sessions, cast registry, models.
+  - action: allow
+    protocol: tcp
+    host: 127.0.0.1
+    port: 8000
+    comment: rushcut backend API
+
+  # Ollama's OpenAI-compatible endpoint serving qwen3-vl:30b. This is the
+  # agent's brain; it must stay reachable and must stay local.
+  - action: allow
+    protocol: tcp
+    host: 127.0.0.1
+    port: 11434
+    comment: local ollama inference (inference.local maps here)
+
+  # DNS is denied explicitly, not just by fallthrough: a resolver query is
+  # the first packet of every phone-home. With no DNS, a stray analytics SDK
+  # or update check cannot even find its server.
+  - action: deny
+    protocol: udp
+    port: 53
+    comment: no DNS — nothing off-box is ever resolved
+  - action: deny
+    protocol: tcp
+    port: 53
+    comment: no DNS-over-TCP either
+
+# Everything else — any other port, any non-loopback address, IPv6, all of
+# it — is denied. Allowlist, not blocklist: new egress requires editing this
+# file on purpose, in review, with a comment saying why.
+default: deny
