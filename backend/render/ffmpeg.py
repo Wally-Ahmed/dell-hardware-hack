@@ -214,6 +214,10 @@ async def render(
         "-preset", "veryfast",  # demo tonight: encode speed over a few % bitrate
         "-pix_fmt", "yuv420p",  # browser/QuickTime-safe output
         "-movflags", "+faststart",  # moov up front so <video> starts instantly
+        # Provenance travels WITH the file, not only in the database — the
+        # consent story should survive a copy to a USB stick.
+        "-metadata", "comment=AI-assisted production; policy-enforced and "
+        "human-approved; full provenance in the project generations record",
         "-progress", "pipe:1",  # machine-readable frame= lines on stdout
         str(out_path),
     ]

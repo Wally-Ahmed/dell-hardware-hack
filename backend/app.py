@@ -22,8 +22,9 @@ from pydantic import BaseModel
 from backend.core.config import settings
 from backend.core.ws import hub
 from backend.jobs.executor import get_executor
+from backend.db.store import get_store
 from backend.jobs.queue import JobQueue
-from backend.jobs.state import oid
+from backend.jobs.state import new_job, oid
 from backend.models.manager import ModelManager
 
 PROJECT_ID = "proj_01J8W_atlas"
@@ -68,8 +69,55 @@ class JobRequest(BaseModel):
     params: dict[str, Any] = {}
 
 
+async def _pre_gpu_cast_gate(req: JobRequest) -> dict[str, Any] | None:
+    """Consent check BEFORE the GPU ever runs. The post-generation check on
+    output stays authoritative; this one refuses to spend a 3-6 minute render
+    on a request that already references an unapproved or unknown person.
+    Only person refs (per_*) are gated — asset refs are not people."""
+    person_refs = [r for r in (req.params.get("references") or []) if str(r).startswith("per_")]
+    if not person_refs:
+        return None
+    store = await get_store()
+    # list() seeds the demo people on a fresh store; get() alone would see an
+    # empty registry on the first request of the process and block everyone.
+    await store.people.list(req.projectId)
+    unapproved: list[dict[str, Any]] = []
+    unresolved: list[dict[str, Any]] = []
+    for ref in person_refs:
+        person = await store.people.get(ref)
+        if person is None:
+            # Missing from the registry is unresolved, and unresolved never
+            # auto-passes — same rule as the output check.
+            unresolved.append({"trackId": ref, "reason": "not in cast registry", "cropUrl": None})
+        elif person.get("policy") != "approved":
+            unapproved.append(
+                {"trackId": ref, "personId": ref, "confidence": 1.0, "frames": [], "cropUrl": None}
+            )
+    if not unapproved and not unresolved:
+        return None
+    job = new_job(req.type, req.projectId, req.params)
+    job.update(
+        state="policy_blocked",
+        stage="policy_check",
+        finishedAt=job["createdAt"],
+        message="blocked before generation: request references non-approved people",
+        policy={
+            "verdict": "blocked",
+            "unapproved": unapproved,
+            "unresolved": unresolved,
+            "remediation": None,
+            "remediatedAssetId": None,
+        },
+    )
+    return job
+
+
 @app.post("/jobs")
 async def create_job(req: JobRequest, request: Request) -> dict[str, Any]:
+    blocked = await _pre_gpu_cast_gate(req)
+    if blocked is not None:
+        await request.app.state.queue.admit(blocked)
+        return blocked
     return await request.app.state.queue.submit(req.type, req.projectId, req.params)
 
 

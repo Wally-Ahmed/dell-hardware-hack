@@ -30,3 +30,11 @@ runs with `RUSHCUT_EXECUTOR=simulated` and fakes generation.
 
 A worked example of the patching convention lives at
 `backend/tests/fixtures/wan_fixture.json`.
+
+## Known-good fallback graphs
+
+If a template you build misbehaves, NVIDIA's **dgx-spark-playbooks** repo carries
+Apache-2.0, GB10-validated ComfyUI API workflows (FLUX @ euler/simple/20 steps/guidance
+3.5/1024²; Wan T2V/I2V with tuned uni_pc settings). Take them from NVIDIA's repo directly
+(license-clean), retitle the input nodes to the `RUSHCUT_*` convention, and save under our
+template names.
