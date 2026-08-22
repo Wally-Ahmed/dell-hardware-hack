@@ -1,6 +1,7 @@
 """The gate must work on the very first request of a process — the store
 seeds on list(), and get()-only access saw an empty registry (live-caught)."""
 from __future__ import annotations
+
 import pytest
 
 

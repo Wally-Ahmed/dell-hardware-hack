@@ -216,8 +216,8 @@ async def render(
         "-movflags", "+faststart",  # moov up front so <video> starts instantly
         # Provenance travels WITH the file, not only in the database — the
         # consent story should survive a copy to a USB stick.
-        "-metadata", "comment=AI-assisted production; policy-enforced and "
-        "human-approved; full provenance in the project generations record",
+        "-metadata",
+        "comment=AI-assisted production; policy-enforced and human-approved; full provenance in the project generations record",
         "-progress", "pipe:1",  # machine-readable frame= lines on stdout
         str(out_path),
     ]

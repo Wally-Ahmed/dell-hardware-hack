@@ -21,8 +21,8 @@ from pydantic import BaseModel
 
 from backend.core.config import settings
 from backend.core.ws import hub
-from backend.jobs.executor import get_executor
 from backend.db.store import get_store
+from backend.jobs.executor import get_executor
 from backend.jobs.queue import JobQueue
 from backend.jobs.state import new_job, oid
 from backend.models.manager import ModelManager
