@@ -28,15 +28,21 @@ contract, `docs/PLAN.md` for the full architecture essay.
 
 Every branch at the same tip. What remains is the BOX (human + hardware) and the demo.
 
-**19:35 EDT regression status:** ten commits landed after the original core-loop drive
-(pre-GPU cast gate, per-job-type template mapping, runsheet, walkthrough v2–v4). Suite
-re-verified green on tip in the Codespace (43/43 backend+agent+ingest there); a fresh
-full-loop UI drive on tip is running. **Box-side evidence (smoke test, LOOP GREEN ON REAL
-WEIGHTS) has NOT been pasted to the conductor yet** — Role A has the runsheet
-(docs/DEMO_RUNSHEET.md) and the endgame prompt (docs/ENDGAME_PROMPT.md); the two gating
-pastes remain: smoke output, then the loop-check result. On green, flip
-`RUSHCUT_EXECUTOR=comfy` re-verification is Role A-side (the conductor cannot reach the
-air-gapped box; it debugs through pasted output).
+**COMFY-FLIP VERIFIED AGAINST REAL COMFYUI (Codespace, CPU, weights-free).** Since the
+air-gapped GB10 never pasted its smoke output to the conductor, the flip clause was proven
+the only way reachable from here: real ComfyUI 0.33.0 (CPU mode) + a weights-free
+EmptyImage→SaveImage graph saved under the wan5b_i2v template name, backend restarted with
+`RUSHCUT_EXECUTOR=comfy`. Evidence: health `{"executor":"comfy"}`; chat plan HELD with 0
+jobs; approve → job through the REAL ComfyExecutor (template load → patch → POST /prompt →
+/history polling → /view fetch) → `complete`, clear verdict, provenance model resolved via
+registry (`wan2.2-ti2v-5b`, real seed); artifact `rushcut_smoke_00001_.png` physically
+written by ComfyUI into media_dir; pre-GPU cast gate still blocks unapproved refs on the
+comfy path (born `policy_blocked`, ComfyUI never invoked). Remaining delta to the literal
+box: real weights + the GUI-built template — mechanically the identical code path, staged
+for Role A in docs/DEMO_RUNSHEET.md + docs/ENDGAME_PROMPT.md.
+
+Earlier same evening: suite re-verified on tip (43/43 in Codespace), ten post-drive
+commits all merged.
 
 - **Core loop PROVEN end to end in the Codespace** (editor + real backend + dev brain):
   pendingPlan held with ZERO jobs → approve → `generate_shot` → complete, clear verdict,
